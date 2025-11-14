@@ -133,7 +133,6 @@ header {
     top: 0;
     left: 0;
     color: white;
-    height: 40px;
     padding: 0 10px;
 
     display: flex;
@@ -158,5 +157,15 @@ header {
     /* Allows two-way split when all three layers are shown */
     body:has(#show-sido:checked):has(#show-sgg:checked):has(#show-emdong:checked) .map {
         height: 50vh;
+    }
+
+    header {
+        gap: 2px;
+        flex-direction: column;
+    }
+    header h1 {
+        text-align: left;
+        width: 100%;
+        font-size: 1em;
     }
 }
