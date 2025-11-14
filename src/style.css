@@ -24,6 +24,38 @@ body:has(#show-tooltips:checked) {
     --show-tooltips: block;
 }
 
+
+#loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #0008;
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 1.5em;
+    color: #fff;
+    z-index: 1000000;
+}
+#loading .spinner {
+    border: 8px solid #fff;
+    border-top: 8px solid transparent;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 #maps-container {
     position: relative;
     display: flex;
@@ -79,7 +111,8 @@ header {
     top: 0;
     left: 0;
     color: white;
-    padding: 0 5px;
+    height: 40px;
+    padding: 0 10px;
 
     display: flex;
     align-items: center;
@@ -88,5 +121,20 @@ header {
     & h1 {
         margin: 0;
         font-size: 1.4em;
+    }
+}
+
+
+@media screen and (max-width: 800px) {
+    #maps-container {
+        flex-wrap: wrap;
+    }
+    .map {
+        min-width: 50vw;
+    }
+
+    /* Allows two-way split when all three layers are shown */
+    body:has(#show-sido:checked):has(#show-sgg:checked):has(#show-emdong:checked) .map {
+        height: 50vh;
     }
 }

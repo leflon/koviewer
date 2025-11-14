@@ -63,6 +63,7 @@ for (const map of Object.values(maps)) {
 
 
 await Promise.all(Object.values(datasets));
+document.getElementById('loading').style.display = 'none';
 
 for (const [level, map] of Object.entries(maps)) {
     const baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
