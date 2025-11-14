@@ -42,14 +42,36 @@ body:has(#show-tooltips:checked) {
     color: #fff;
     z-index: 1000000;
 }
-#loading .spinner {
-    border: 8px solid #fff;
-    border-top: 8px solid transparent;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    animation: spin 1s linear infinite;
+
+.progress-item {
+    width: 300px;
+    font: 14px monospace;
 }
+
+.progress {
+    width: 100%;
+    height: 8px;
+    background: #fff;
+    border-radius: 4px;
+    position: relative;
+}
+
+.progress-bar {
+    width: 0%;
+    height: 100%;
+    background: #2b9cff;
+    border-radius: 4px;
+    transition: width .15s linear;
+}
+
+.progress-percentage {
+    text-align: right;
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+
+
 
 @keyframes spin {
     0% { transform: rotate(0deg); }
