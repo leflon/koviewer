@@ -17,7 +17,7 @@ async function loadData(id) {
 
 function createMap(selector) {
     const map = L.map(selector, { preferCanvas: true, zoomControl: false }).setView([36.05591712705268, 127.9057675953637], 7);
-    L.control.zoom({ position: 'bottomleft' }).addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
     return map;
 
 }

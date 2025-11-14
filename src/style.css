@@ -109,6 +109,18 @@ body:has(#show-tooltips:checked) {
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
+.map[data-loading='false']::before {
+    content: attr(data-name);
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    background: #0008;
+    color: white;
+    padding: 2px 6px;
+    font-size: 1em;
+    z-index: 10000;
+    border-radius: 4px;
+}
 
 .tooltip {
     display: var(--show-tooltips);
