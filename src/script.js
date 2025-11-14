@@ -1,3 +1,4 @@
+
 async function loadData(id) {
     const CACHE_NAME = 'geojson-cache-v1';
     const url = `/geo/${id}`;
@@ -15,8 +16,8 @@ async function loadData(id) {
 }
 
 function createMap(selector) {
-    const map = L.map(selector, {preferCanvas: true, zoomControl: false}).setView([36.05591712705268, 127.9057675953637], 7);
-    L.control.zoom({position: 'bottomleft'}).addTo(map);
+    const map = L.map(selector, { preferCanvas: true, zoomControl: false }).setView([36.05591712705268, 127.9057675953637], 7);
+    L.control.zoom({ position: 'bottomleft' }).addTo(map);
     return map;
 
 }
@@ -61,13 +62,16 @@ for (const map of Object.values(maps)) {
     }
 }
 
+document.querySelectorAll('#controls input[type=checkbox]').forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+        Object.values(maps).forEach(map => map.invalidateSize());
+    }
+    );
+});
 
-await Promise.all(Object.values(datasets));
-document.getElementById('loading').style.display = 'none';
-
-for (const [level, map] of Object.entries(maps)) {
+async function resolveMap(level) {
+    document.querySelector(`.map#map-${level}`).dataset.loading = 'false';
     const baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
-    console.log(datasets[level]);
     L.geoJSON(await datasets[level], {
         style: styles[level],
         onEachFeature: (feature, layer) => {
@@ -78,13 +82,13 @@ for (const [level, map] of Object.entries(maps)) {
             });
         }
 
-    }).addTo(map);
-    baseLayer.addTo(map);
+    }).addTo(maps[level]);
+    baseLayer.addTo(maps[level]);
+
 }
 
-document.querySelectorAll('#controls input[type=checkbox]').forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
-        Object.values(maps).forEach(map => map.invalidateSize());
-    }
-    );
-});
+for (const [level, promise] of Object.entries(datasets)) {
+    promise.then(() => {
+        resolveMap(level);
+    });
+}
