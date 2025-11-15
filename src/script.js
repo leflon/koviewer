@@ -1,34 +1,45 @@
 async function loadData(id) {
-	const CACHE_NAME = 'geojson-cache-v1';
-	const url = `/geo/${id}`;
-	const cache = await caches.open(CACHE_NAME);
-	const cachedResp = await cache.match(url);
-	// Always use cache if available
-	if (cachedResp) {
-		return await cachedResp.json();
+	async function convert(res) {
+		const topo = await res.json();
+		console.time('convert-' + id);
+		const geojson = topojson.feature(
+			topo,
+			topo.objects[id.replace(/-/g, '_') + '_geo']
+		);
+		console.timeEnd('convert-' + id);
+		return geojson;
 	}
 
-	const resp = await fetch(url);
-	if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
-	await cache.put(url, resp.clone());
-	return await resp.json();
-}
+	const CACHE_NAME = 'geojson-cache-v2';
+	const url = `/geo/${id}-topo`;
+	const cache = await caches.open(CACHE_NAME);
 
+	const cached = await cache.match(url);
+	if (cached) {
+		console.log(`Retrieved ${id} from cache.`);
+		return convert(cached);
+	}
+
+	const res = await fetch(`/geo/${id}-topo`);
+	if (res.ok) cache.put(url, res.clone());
+	return convert(res);
+}
 function createMap(selector) {
 	const map = L.map(selector, {
 		preferCanvas: true,
 		zoomControl: false
-	}).setView([36.05591712705268, 127.9057675953637], 11);
+	}).setView([36.05591712705268, 127.9057675953637], 7);
 	L.control.zoom({ position: 'bottomright' }).addTo(map);
+	L.control.scale({ imperial: false }).addTo(map);
 	return map;
 }
 
 console.log('Loading GeoJSON data...');
 
 const datasets = {
-	sido: loadData('skorea-provinces-2018-geo'),
-	sgg: loadData('skorea-municipalities-2018-geo'),
-	emdong: loadData('skorea-submunicipalities-2018-geo')
+	sido: loadData('skorea-provinces-2018'),
+	sgg: loadData('skorea-municipalities-2018'),
+	emdong: loadData('skorea-submunicipalities-2018')
 };
 
 const COLORS = {
