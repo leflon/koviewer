@@ -1,32 +1,64 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-    <head>
-        <title>한국 행정 구역 뷰어</title>
-        <meta charset='utf-8' />
-        <link rel="stylesheet" href="style.css" />
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin=""/>
-      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-        crossorigin=""></script>
-        <script src="https://cdn.jsdelivr.net/npm/leaflet.sync@0.2.4/L.Map.Sync.min.js"></script>
-        <script src="script.js" defer></script>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body>
-        <header>
-          <h1>한국 행정 구역 뷰어</h1>
-          <div id="controls">
-            <label for="show-sido"><input type="checkbox" id="show-sido" checked /> 시도</label>
-            <label for="show-sgg"><input type="checkbox" id="show-sgg" checked /> 시군구</label>
-            <label for="show-emdong"><input type="checkbox" id="show-emdong" checked /> 읍면동</label>
-            <label for="show-tooltips"><input type="checkbox" id="show-tooltips" /> 툴팁</label>
-          </div>
-        </header>
-        <div id="maps-container">
-          <div class="map" id="map-sido" data-loading="true" data-name="시도"></div>
-          <div class="map" id="map-sgg" data-loading="true" data-name="시군구"></div>
-          <div class="map" id="map-emdong" data-loading="true" data-name="읍면동"></div>
-        </div>
-    </body>
+	<head>
+		<title>한국 행정 구역 뷰어</title>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" href="style.css" />
+		<link
+			rel="stylesheet"
+			href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+			integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+			crossorigin=""
+		/>
+		<script
+			src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+			integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+			crossorigin=""
+		></script>
+		<script src="https://cdn.jsdelivr.net/npm/leaflet.sync@0.2.4/L.Map.Sync.min.js"></script>
+		<script src="script.js" defer></script>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	</head>
+	<body>
+		<header>
+			<h1>한국 행정 구역 뷰어</h1>
+			<div id="controls">
+				<label for="show-sido"
+					><input type="checkbox" id="show-sido" checked />
+					시도</label
+				>
+				<label for="show-sgg"
+					><input type="checkbox" id="show-sgg" checked />
+					시군구</label
+				>
+				<label for="show-emdong"
+					><input type="checkbox" id="show-emdong" checked />
+					읍면동</label
+				>
+				<label for="show-tooltips"
+					><input type="checkbox" id="show-tooltips" /> 툴팁</label
+				>
+			</div>
+		</header>
+		<div id="maps-container">
+			<div
+				class="map"
+				id="map-sido"
+				data-loading="true"
+				data-name="시도"
+			></div>
+			<div
+				class="map"
+				id="map-sgg"
+				data-loading="true"
+				data-name="시군구"
+			></div>
+			<div
+				class="map"
+				id="map-emdong"
+				data-loading="true"
+				data-name="읍면동"
+			></div>
+		</div>
+	</body>
+</html>

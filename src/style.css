@@ -1,188 +1,190 @@
 body {
-    /* Visiblity variables default values (display property) */
-    --show-sido: none;
-    --show-sgg: none;
-    --show-emdong: none;
-    --show-tooltips: none;
-    padding: 0;
-    margin: 0;
+	/* Visiblity variables default values (display property) */
+	--show-sido: none;
+	--show-sgg: none;
+	--show-emdong: none;
+	--show-tooltips: none;
+	padding: 0;
+	margin: 0;
 }
 
-
 body:has(#show-sido:checked) {
-    --show-sido: block;
+	--show-sido: block;
 }
 
 body:has(#show-sgg:checked) {
-    --show-sgg: block;
+	--show-sgg: block;
 }
 body:has(#show-emdong:checked) {
-    --show-emdong: block;
+	--show-emdong: block;
 }
 
 body:has(#show-tooltips:checked) {
-    --show-tooltips: block;
+	--show-tooltips: block;
 }
-
 
 #loading {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: #0008;
-    backdrop-filter: blur(4px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    font-size: 1.5em;
-    color: #fff;
-    z-index: 1000000;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: #0008;
+	backdrop-filter: blur(4px);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	font-size: 1.5em;
+	color: #fff;
+	z-index: 1000000;
 }
 #loading .spinner {
-    border: 8px solid #fff;
-    border-top: 8px solid transparent;
-    border-radius: 50%;
-    width: 60px;
-    height: 60px;
-    animation: spin 1s linear infinite;
+	border: 8px solid #fff;
+	border-top: 8px solid transparent;
+	border-radius: 50%;
+	width: 60px;
+	height: 60px;
+	animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
 #maps-container {
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    width: 100vw;
-    height: 100vh;
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	width: 100vw;
+	height: 100vh;
 }
 
 .map {
-    box-sizing: border-box;
-    flex: 1;
-    height: 100vh;
-    border: 1px solid #aaa;
+	box-sizing: border-box;
+	flex: 1;
+	height: 100vh;
+	border: 1px solid #aaa;
 
-    &#map-sido {
-        display: var(--show-sido);
-    }
+	&#map-sido {
+		display: var(--show-sido);
+	}
 
-    &#map-sgg {
-        display: var(--show-sgg);
-    }
+	&#map-sgg {
+		display: var(--show-sgg);
+	}
 
-    &#map-emdong {
-        display: var(--show-emdong);
-    }
+	&#map-emdong {
+		display: var(--show-emdong);
+	}
 }
-
 
 .map[data-loading='true']::before {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    background: #0004;
-    z-index: 9999;
+	content: '';
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	background: #0004;
+	z-index: 9999;
 }
 .map[data-loading='true']::after {
-    content: '';
-    position: absolute;
-    width: 24px;
-    height: 24px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10000;
+	content: '';
+	position: absolute;
+	width: 24px;
+	height: 24px;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 10000;
 
-    border: 4px solid #fff;
-    border-top: 4px solid transparent;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+	border: 4px solid #fff;
+	border-top: 4px solid transparent;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
 }
 .map[data-loading='false']::before {
-    content: attr(data-name);
-    position: absolute;
-    bottom: 5px;
-    left: 5px;
-    background: #0008;
-    color: white;
-    padding: 2px 6px;
-    font-size: 1em;
-    z-index: 10000;
-    border-radius: 4px;
+	content: attr(data-name);
+	position: absolute;
+	bottom: 5px;
+	left: 5px;
+	background: #0008;
+	color: white;
+	padding: 2px 6px;
+	font-size: 1em;
+	z-index: 10000;
+	border-radius: 4px;
 }
 
 .tooltip {
-    display: var(--show-tooltips);
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    text-shadow: 1px 1px 0px #000;
+	display: var(--show-tooltips);
+	background: transparent;
+	border: none;
+	box-shadow: none;
+	text-shadow: 1px 1px 0px #000;
 
-    &.sido {
-        color: #00d9ff;
-    }
-    &.sgg {
-        color: #33ff88;
-    }
-    &.emdong {
-        color: #ff5500;
-    }
+	&.sido {
+		color: #00d9ff;
+	}
+	&.sgg {
+		color: #33ff88;
+	}
+	&.emdong {
+		color: #ff5500;
+	}
 }
-
 
 header {
-    box-sizing: border-box;
-    position: fixed;
-    z-index: 200000;
-    background: #0008;
-    width: 100%;
-    top: 0;
-    left: 0;
-    color: white;
-    padding: 0 10px;
+	box-sizing: border-box;
+	position: fixed;
+	z-index: 200000;
+	background: #0008;
+	width: 100%;
+	top: 0;
+	left: 0;
+	color: white;
+	padding: 0 10px;
 
-    display: flex;
-    align-items: center;
-    gap: 20px;
+	display: flex;
+	align-items: center;
+	gap: 20px;
 
-    & h1 {
-        margin: 0;
-        font-size: 1.4em;
-    }
+	& h1 {
+		margin: 0;
+		font-size: 1.4em;
+	}
 }
 
-
 @media screen and (max-width: 800px) {
-    #maps-container {
-        flex-wrap: wrap;
-    }
-    .map {
-        min-width: 50vw;
-    }
+	#maps-container {
+		flex-wrap: wrap;
+	}
+	.map {
+		min-width: 50vw;
+	}
 
-    /* Allows two-way split when all three layers are shown */
-    body:has(#show-sido:checked):has(#show-sgg:checked):has(#show-emdong:checked) .map {
-        height: 50vh;
-    }
+	/* Allows two-way split when all three layers are shown */
+	body:has(#show-sido:checked):has(#show-sgg:checked):has(
+			#show-emdong:checked
+		)
+		.map {
+		height: 50vh;
+	}
 
-    header {
-        gap: 2px;
-        flex-direction: column;
-    }
-    header h1 {
-        text-align: left;
-        width: 100%;
-        font-size: 1em;
-    }
+	header {
+		gap: 2px;
+		flex-direction: column;
+	}
+	header h1 {
+		text-align: left;
+		width: 100%;
+		font-size: 1em;
+	}
 }
