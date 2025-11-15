@@ -3,7 +3,6 @@ body {
 	--show-sido: none;
 	--show-sgg: none;
 	--show-emdong: none;
-	--show-tooltips: none;
 	padding: 0;
 	margin: 0;
 }
@@ -17,10 +16,6 @@ body:has(#show-sgg:checked) {
 }
 body:has(#show-emdong:checked) {
 	--show-emdong: block;
-}
-
-body:has(#show-tooltips:checked) {
-	--show-tooltips: block;
 }
 
 #loading {
@@ -117,7 +112,7 @@ body:has(#show-tooltips:checked) {
 	border: none;
 	box-shadow: none;
 	text-shadow: 1px 1px 0px #000;
-
+	font-size: 1.6em;
 	&.sido {
 		&.시 {
 			color: #2da5ff;

@@ -90,15 +90,33 @@ async function resolveMap(level) {
 			const suffix = feature.properties.name.slice(-1);
 			return {
 				color: COLORS[level][suffix],
-				fillOpacity: 0.2
+				fillOpacity: 0.2,
+				weight: 1.5
 			};
 		},
 		onEachFeature: (feature, layer) => {
 			const suffix = feature.properties.name.slice(-1);
 			layer.bindTooltip(`<strong>${feature.properties.name}</strong>`, {
-				permanent: true,
+				permanent: false,
+				sticky: true,
 				direction: 'center',
 				className: `tooltip ${level} ${suffix}`
+			});
+
+			layer.on({
+				mouseover: (e) => {
+					e.target.setStyle({
+						fillOpacity: 0.5
+					});
+				},
+				mouseout: (e) => {
+					e.target.setStyle({
+						fillOpacity: 0.2
+					});
+				},
+				click: (e) => {
+					maps[level].fitBounds(e.target.getBounds());
+				}
 			});
 		}
 	}).addTo(maps[level]);
