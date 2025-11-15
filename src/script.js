@@ -18,7 +18,7 @@ function createMap(selector) {
 	const map = L.map(selector, {
 		preferCanvas: true,
 		zoomControl: false
-	}).setView([36.05591712705268, 127.9057675953637], 7);
+	}).setView([36.05591712705268, 127.9057675953637], 11);
 	L.control.zoom({ position: 'bottomright' }).addTo(map);
 	return map;
 }
@@ -31,21 +31,20 @@ const datasets = {
 	emdong: loadData('skorea-submunicipalities-2018-geo')
 };
 
-const styles = {
+const COLORS = {
 	sido: {
-		color: '#00d9ffff',
-		weight: 3,
-		fillOpacity: 0.1
+		시: '#2DA5FF',
+		도: '#0D3889'
 	},
 	sgg: {
-		color: '#33ff88',
-		weight: 2,
-		fillOpacity: 0.1
+		시: '#FFDB1A',
+		군: '#FFB100',
+		구: '#FF921A'
 	},
 	emdong: {
-		color: '#ff8833',
-		weight: 1,
-		fillOpacity: 0.1
+		읍: '#2FFF00',
+		면: '#3AD417',
+		동: '#20750D'
 	}
 };
 
@@ -76,12 +75,19 @@ async function resolveMap(level) {
 		'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
 	);
 	L.geoJSON(await datasets[level], {
-		style: styles[level],
+		style: (feature) => {
+			const suffix = feature.properties.name.slice(-1);
+			return {
+				color: COLORS[level][suffix],
+				fillOpacity: 0.2
+			};
+		},
 		onEachFeature: (feature, layer) => {
+			const suffix = feature.properties.name.slice(-1);
 			layer.bindTooltip(`<strong>${feature.properties.name}</strong>`, {
 				permanent: true,
 				direction: 'center',
-				className: 'tooltip ' + level
+				className: `tooltip ${level} ${suffix}`
 			});
 		}
 	}).addTo(maps[level]);

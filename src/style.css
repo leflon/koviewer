@@ -131,13 +131,34 @@ body:has(#show-tooltips:checked) {
 	text-shadow: 1px 1px 0px #000;
 
 	&.sido {
-		color: #00d9ff;
+		&.시 {
+			color: #2da5ff;
+		}
+		&.도 {
+			color: #0d3889;
+		}
 	}
 	&.sgg {
-		color: #33ff88;
+		&.시 {
+			color: #ffdb1a;
+		}
+		&.군 {
+			color: #ffb100;
+		}
+		&.구 {
+			color: #ff921a;
+		}
 	}
 	&.emdong {
-		color: #ff5500;
+		&.읍 {
+			color: #2fff00;
+		}
+		&.면 {
+			color: #3ad417;
+		}
+		&.동 {
+			color: #20750d;
+		}
 	}
 }
 
