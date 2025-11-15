@@ -59,6 +59,12 @@ const COLORS = {
 	}
 };
 
+const TOOLTIP = document.getElementById('tooltip');
+document.getElementById('maps-container').addEventListener('mousemove', (e) => {
+	TOOLTIP.style.top = e.clientY + 'px';
+	TOOLTIP.style.left = e.clientX + 'px';
+});
+
 const maps = {};
 maps.sido = createMap('map-sido');
 maps.sgg = createMap('map-sgg');
@@ -96,20 +102,18 @@ async function resolveMap(level) {
 		},
 		onEachFeature: (feature, layer) => {
 			const suffix = feature.properties.name.slice(-1);
-			layer.bindTooltip(`<strong>${feature.properties.name}</strong>`, {
-				permanent: false,
-				sticky: true,
-				direction: 'center',
-				className: `tooltip ${level} ${suffix}`
-			});
-
 			layer.on({
 				mouseover: (e) => {
 					e.target.setStyle({
 						fillOpacity: 0.5
 					});
+					console.log(e);
+					TOOLTIP.style.display = 'block';
+					TOOLTIP.style.color = COLORS[level][suffix];
+					TOOLTIP.textContent = feature.properties.name;
 				},
 				mouseout: (e) => {
+					TOOLTIP.style.display = 'none';
 					e.target.setStyle({
 						fillOpacity: 0.2
 					});

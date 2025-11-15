@@ -106,13 +106,13 @@ body:has(#show-emdong:checked) {
 	animation: spin 1s linear infinite;
 }
 
-.tooltip {
-	display: var(--show-tooltips);
-	background: transparent;
-	border: none;
-	box-shadow: none;
-	text-shadow: 1px 1px 0px #000;
-	font-size: 1.6em;
+#tooltip {
+	position: fixed;
+	pointer-events: none;
+	z-index: 10000;
+	transform: translate(-50%, calc(-50% - 15px));
+	text-shadow: 1px 1px #000;
+	font-size: 1.3em;
 	&.sido {
 		&.시 {
 			color: #2da5ff;
