@@ -2,10 +2,7 @@ async function loadData(id) {
 	async function convert(res) {
 		const topo = await res.json();
 		console.time('convert-' + id);
-		const geojson = topojson.feature(
-			topo,
-			topo.objects[id.replace(/-/g, '_') + '_geo']
-		);
+		const geojson = topojson.feature(topo, topo.objects[id.replace(/-/g, '_') + '_geo']);
 		console.timeEnd('convert-' + id);
 		return geojson;
 	}
@@ -61,8 +58,15 @@ const COLORS = {
 
 const TOOLTIP = document.getElementById('tooltip');
 document.getElementById('maps-container').addEventListener('mousemove', (e) => {
-	TOOLTIP.style.top = e.clientY + 'px';
-	TOOLTIP.style.left = e.clientX + 'px';
+	const rect = TOOLTIP.getBoundingClientRect();
+	let x = e.clientX - rect.width / 2;
+	let y = e.clientY - rect.height / 2 + 30;
+	if (x + rect.width >= window.innerWidth) x = window.innerWidth - rect.width;
+	if (x <= 0) x = 0;
+	if (y + rect.height >= window.innerHeight) y = window.innerHeight - rect.height;
+	if (y <= 0) y = 0;
+	TOOLTIP.style.top = y + 'px';
+	TOOLTIP.style.left = x + 'px';
 });
 
 const maps = {};
@@ -78,19 +82,15 @@ for (const map of Object.values(maps)) {
 	}
 }
 
-document
-	.querySelectorAll('#controls input[type=checkbox]')
-	.forEach((checkbox) => {
-		checkbox.addEventListener('change', () => {
-			Object.values(maps).forEach((map) => map.invalidateSize());
-		});
+document.querySelectorAll('#controls input[type=checkbox]').forEach((checkbox) => {
+	checkbox.addEventListener('change', () => {
+		Object.values(maps).forEach((map) => map.invalidateSize());
 	});
+});
 
 async function resolveMap(level) {
 	document.querySelector(`.map#map-${level}`).dataset.loading = 'false';
-	const baseLayer = L.tileLayer(
-		'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
-	);
+	const baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
 	L.geoJSON(await datasets[level], {
 		style: (feature) => {
 			const suffix = feature.properties.name.slice(-1);
