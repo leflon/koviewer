@@ -24,40 +24,16 @@
 		<header>
 			<h1>한국 행정 구역 뷰어</h1>
 			<div id="controls">
-				<label for="show-sido"
-					><input type="checkbox" id="show-sido" checked />
-					시도</label
-				>
-				<label for="show-sgg"
-					><input type="checkbox" id="show-sgg" checked />
-					시군구</label
-				>
-				<label for="show-emdong"
-					><input type="checkbox" id="show-emdong" checked />
-					읍면동</label
-				>
+				<label for="show-sido"><input type="checkbox" id="show-sido" checked /> 시도</label>
+				<label for="show-sgg"><input type="checkbox" id="show-sgg" checked /> 시군구</label>
+				<label for="show-emdong"><input type="checkbox" id="show-emdong" checked /> 읍면동</label>
 			</div>
 		</header>
 		<div id="maps-container">
-			<div id="tooltip">cca</div>
-			<div
-				class="map"
-				id="map-sido"
-				data-loading="true"
-				data-name="시도"
-			></div>
-			<div
-				class="map"
-				id="map-sgg"
-				data-loading="true"
-				data-name="시군구"
-			></div>
-			<div
-				class="map"
-				id="map-emdong"
-				data-loading="true"
-				data-name="읍면동"
-			></div>
+			<div id="tooltip"></div>
+			<div class="map" id="map-sido" data-loading="true" data-name="시도"></div>
+			<div class="map" id="map-sgg" data-loading="true" data-name="시군구"></div>
+			<div class="map" id="map-emdong" data-loading="true" data-name="읍면동"></div>
 		</div>
 	</body>
 </html>

@@ -109,40 +109,11 @@ body:has(#show-emdong:checked) {
 #tooltip {
 	position: fixed;
 	pointer-events: none;
+	display: none;
 	z-index: 10000;
 	text-shadow: 1px 1px #000;
 	font-size: 1.3em;
 	white-space: pre;
-	&.sido {
-		&.시 {
-			color: #2da5ff;
-		}
-		&.도 {
-			color: #0d3889;
-		}
-	}
-	&.sgg {
-		&.시 {
-			color: #ffdb1a;
-		}
-		&.군 {
-			color: #ffb100;
-		}
-		&.구 {
-			color: #ff921a;
-		}
-	}
-	&.emdong {
-		&.읍 {
-			color: #2fff00;
-		}
-		&.면 {
-			color: #3ad417;
-		}
-		&.동 {
-			color: #20750d;
-		}
-	}
 }
 
 header {
@@ -175,10 +146,7 @@ header {
 	}
 
 	/* Allows two-way split when all three layers are shown */
-	body:has(#show-sido:checked):has(#show-sgg:checked):has(
-			#show-emdong:checked
-		)
-		.map {
+	body:has(#show-sido:checked):has(#show-sgg:checked):has(#show-emdong:checked) .map {
 		height: 50vh;
 	}
 
