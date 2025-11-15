@@ -21,6 +21,7 @@ async function loadData(id) {
 	if (res.ok) cache.put(url, res.clone());
 	return convert(res);
 }
+
 function createMap(selector) {
 	const map = L.map(selector, {
 		preferCanvas: true,
@@ -31,7 +32,33 @@ function createMap(selector) {
 	return map;
 }
 
-console.log('Loading GeoJSON data...');
+function findLayersByName(layers, query) {
+	const foundNames = Object.keys(layers)
+		.filter((name) => new RegExp(query, 'g').test(name))
+		.slice(0, 20);
+	console.log(foundNames);
+	const result = {};
+	foundNames.forEach((name) => {
+		result[name] = layers[name];
+	});
+	return result;
+}
+
+function jumpTo(layer) {
+	layer._map.fitBounds(layer.getBounds());
+}
+function highlightLayer(layer) {
+	layer.setStyle({
+		fillOpacity: 0.5
+	});
+}
+function blurLayer(layer) {
+	layer.setStyle({
+		fillOpacity: 0.2
+	});
+}
+
+console.log('Loading data...');
 
 const datasets = {
 	sido: loadData('skorea-provinces-2018'),
@@ -88,6 +115,8 @@ document.querySelectorAll('#controls input[type=checkbox]').forEach((checkbox) =
 	});
 });
 
+const LAYERS = {};
+
 async function resolveMap(level) {
 	document.querySelector(`.map#map-${level}`).dataset.loading = 'false';
 	const baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
@@ -101,22 +130,18 @@ async function resolveMap(level) {
 			};
 		},
 		onEachFeature: (feature, layer) => {
+			LAYERS[feature.properties.name] = layer;
 			const suffix = feature.properties.name.slice(-1);
 			layer.on({
 				mouseover: (e) => {
-					e.target.setStyle({
-						fillOpacity: 0.5
-					});
-					console.log(e);
+					highlightLayer(e.target);
 					TOOLTIP.style.display = 'block';
 					TOOLTIP.style.color = COLORS[level][suffix];
 					TOOLTIP.textContent = feature.properties.name;
 				},
 				mouseout: (e) => {
 					TOOLTIP.style.display = 'none';
-					e.target.setStyle({
-						fillOpacity: 0.2
-					});
+					blurLayer(e.target);
 				},
 				click: (e) => {
 					maps[level].fitBounds(e.target.getBounds());
@@ -132,3 +157,33 @@ for (const [level, promise] of Object.entries(datasets)) {
 		resolveMap(level);
 	});
 }
+
+const searchResultsContainer = document.querySelector('#search #search-results');
+const searchInput = document.querySelector('input#search-input');
+searchInput.addEventListener('input', (e) => {
+	const query = e.target.value.trim();
+	if (query.length === 0) {
+		searchResultsContainer.style.display = 'none';
+		searchResultsContainer.innerHTML = '';
+		return;
+	}
+
+	const results = findLayersByName(LAYERS, query);
+	searchResultsContainer.innerHTML = '';
+	for (const [name, layer] of Object.entries(results)) {
+		const elm = document.createElement('div');
+		elm.className = 'search-result';
+		elm.textContent = name;
+		elm.addEventListener('click', () => {
+			jumpTo(layer);
+			searchResultsContainer.style.display = 'none';
+		});
+		elm.addEventListener('mouseenter', () => highlightLayer(layer));
+		elm.addEventListener('mouseleave', () => blurLayer(layer));
+		searchResultsContainer.appendChild(elm);
+	}
+	if (Object.keys(results).length === 0) searchResultsContainer.style.display = 'none';
+	else searchResultsContainer.style.display = 'block';
+});
+
+searchInput.addEventListener('focus', () => (searchResultsContainer.style.display = 'block'));
