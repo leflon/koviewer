@@ -105,6 +105,18 @@ body:has(#show-emdong:checked) {
 	border-radius: 50%;
 	animation: spin 1s linear infinite;
 }
+.map[data-loading='false']::before {
+	content: attr(data-name);
+	position: absolute;
+	bottom: 25px;
+	left: 5px;
+	padding: 2px 8px;
+	font-size: 1.2em;
+	z-index: 10000;
+	color: #fff;
+	border-radius: 4px;
+	background: #000a;
+}
 
 #tooltip {
 	position: fixed;
@@ -132,6 +144,7 @@ header {
 	gap: 20px;
 
 	& h1 {
+		display: inline-block;
 		margin: 0;
 		font-size: 1.4em;
 	}
@@ -178,11 +191,8 @@ header {
 
 	header {
 		gap: 2px;
-		flex-direction: column;
-	}
-	header h1 {
-		text-align: left;
-		width: 100%;
-		font-size: 1em;
+		& h1 {
+			font-size: 1em;
+		}
 	}
 }
