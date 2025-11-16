@@ -1,9 +1,9 @@
-import viewer from './viewer.html';
+import viewer from './client/viewer.html';
 
 const PUBLIC_GEO_FILES = {
-	sido: 'southkorea-maps/kostat/2018/json/skorea-provinces-2018-topo.json',
-	sgg: 'southkorea-maps/kostat/2018/json/skorea-municipalities-2018-topo.json',
-	emdong: 'southkorea-maps/kostat/2018/json/skorea-submunicipalities-2018-topo.json'
+	sido: '../southkorea-maps/kostat/2018/json/skorea-provinces-2018-topo.json',
+	sgg: '../southkorea-maps/kostat/2018/json/skorea-municipalities-2018-topo.json',
+	emdong: '../southkorea-maps/kostat/2018/json/skorea-submunicipalities-2018-topo.json'
 };
 
 const server = Bun.serve({
