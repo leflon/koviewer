@@ -110,8 +110,11 @@ for (const map of Object.values(maps)) {
 }
 
 document.querySelectorAll('#controls input[type=checkbox]').forEach((checkbox) => {
-	checkbox.addEventListener('change', () => {
-		Object.values(maps).forEach((map) => map.invalidateSize());
+	checkbox.addEventListener('change', (e) => {
+		setTimeout(() => {
+			const ignore = e.target.dataset.level;
+			Object.values(maps).forEach((map) => map.__level !== ignore && map.invalidateSize());
+		});
 	});
 });
 

@@ -24,9 +24,11 @@
 		<header>
 			<h1>한국 행정 구역 뷰어</h1>
 			<div id="controls">
-				<label for="show-sido"><input type="checkbox" id="show-sido" checked /> 시도</label>
-				<label for="show-sgg"><input type="checkbox" id="show-sgg" checked /> 시군구</label>
-				<label for="show-emdong"><input type="checkbox" id="show-emdong" checked /> 읍면동</label>
+				<label for="show-sido"><input type="checkbox" id="show-sido" data-level="sido" checked /> 시도</label>
+				<label for="show-sgg"><input type="checkbox" id="show-sgg" data-level="sgg" checked /> 시군구</label>
+				<label for="show-emdong"
+					><input type="checkbox" id="show-emdong" data-level="emdong" checked /> 읍면동</label
+				>
 			</div>
 			<div id="search">
 				<input type="search" id="search-input" placeholder="검색" />
