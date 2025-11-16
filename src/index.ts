@@ -1,12 +1,24 @@
 import viewer from './viewer.html';
 
+const PUBLIC_GEO_FILES = {
+	sido: 'southkorea-maps/kostat/2018/json/skorea-provinces-2018-topo.json',
+	sgg: 'southkorea-maps/kostat/2018/json/skorea-municipalities-2018-topo.json',
+	emdong: 'southkorea-maps/kostat/2018/json/skorea-submunicipalities-2018-topo.json'
+};
+
 const server = Bun.serve({
 	port: process.env.PORT || process.env.BUN_PORT || 3000,
 	routes: {
 		'/': viewer,
 		'/geo/:id': async (req) => {
 			const { id } = req.params;
-			const file = Bun.file(`southkorea-maps/kostat/2018/json/${id}.json`);
+
+			const path = PUBLIC_GEO_FILES[id];
+			if (!path) {
+				return new Response('Not found', { status: 404 });
+			}
+
+			const file = Bun.file(path);
 			const body = await file.text();
 			return new Response(body);
 		}

@@ -1,13 +1,22 @@
+// Delete deprecated cache
+caches.delete('geojson-cache-v1');
+caches.delete('geojson-cache-v2');
+
 async function loadData(id) {
 	async function convert(res) {
+		const OBJECTS_KEY_BY_ID = {
+			sido: 'skorea_provinces_2018_geo',
+			sgg: 'skorea_municipalities_2018_geo',
+			emdong: 'skorea_submunicipalities_2018_geo'
+		};
 		const topo = await res.json();
 		console.time('convert-' + id);
-		const geojson = topojson.feature(topo, topo.objects[id.replace(/-/g, '_') + '_geo']);
+		const geojson = topojson.feature(topo, OBJECTS_KEY_BY_ID[id]);
 		console.timeEnd('convert-' + id);
 		return geojson;
 	}
 
-	const CACHE_NAME = 'geojson-cache-v2';
+	const CACHE_NAME = 'geojson-cache-v3';
 	const url = `/geo/${id}-topo`;
 	const cache = await caches.open(CACHE_NAME);
 
@@ -17,7 +26,7 @@ async function loadData(id) {
 		return convert(cached);
 	}
 
-	const res = await fetch(`/geo/${id}-topo`);
+	const res = await fetch(`/geo/${id}`);
 	if (res.ok) cache.put(url, res.clone());
 	return convert(res);
 }
@@ -61,9 +70,9 @@ function blurLayer(layer) {
 console.log('Loading data...');
 
 const datasets = {
-	sido: loadData('skorea-provinces-2018'),
-	sgg: loadData('skorea-municipalities-2018'),
-	emdong: loadData('skorea-submunicipalities-2018')
+	sido: loadData('sido'),
+	sgg: loadData('sgg'),
+	emdong: loadData('emdong')
 };
 
 const COLORS = {
