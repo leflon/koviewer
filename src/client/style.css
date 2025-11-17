@@ -161,7 +161,7 @@ header {
 		width: 100%;
 		color: #000;
 		max-height: 100px;
-		overflow: scroll;
+		overflow-y: auto;
 		box-shadow: 0px 0px 5px #0002;
 		&:has(.search-result) {
 			/* Display border only when search results are present, to avoid ugly floating gray bar */
