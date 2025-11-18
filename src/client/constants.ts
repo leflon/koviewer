@@ -5,9 +5,10 @@ import { MapLevel } from './types';
  * The key from the objects fields holding geo data in each level's Topo file.
  */
 export const TOPOLOGY_OBJECTS_KEY: Record<MapLevel, string> = {
-	sido: 'skorea_provinces_2018_geo',
-	sgg: 'skorea_municipalities_2018_geo',
-	emdong: 'skorea_submunicipalities_2018_geo'
+	sido: 'sido',
+	sgg: 'sgg',
+	emdong: 'emdong',
+	li: 'li'
 };
 
 /**
@@ -62,6 +63,9 @@ export const DIVISIONS_COLORS: Record<MapLevel, Record<string, string>> = {
 		읍: '#2FFF00',
 		면: '#3AD417',
 		동: '#20750D'
+	},
+	li: {
+		리: '#bebebeff'
 	}
 };
 

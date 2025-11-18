@@ -25,20 +25,22 @@ console.log('Loading data...');
 const datasets = {
 	sido: loadData('sido'),
 	sgg: loadData('sgg'),
-	emdong: loadData('emdong')
+	emdong: loadData('emdong'),
+	li: loadData('li')
 };
 
 const maps = {
 	sido: createMap('map-sido'),
 	sgg: createMap('map-sgg'),
-	emdong: createMap('map-emdong')
+	emdong: createMap('map-emdong'),
+	li: createMap('map-li')
 };
 
 const ALL_FEATURES = {};
 
 for (const [level, promise] of Object.entries(datasets)) {
 	promise.then((data) => {
-		initMap(maps[level], <MapLevel>level, data, ALL_FEATURES);
+		initMap(maps[<MapLevel>level], <MapLevel>level, data, ALL_FEATURES);
 	});
 }
 
@@ -52,8 +54,13 @@ for (const map of Object.values(maps)) {
 }
 
 /* Bind settings UI */
+let displayedMapsCount = 4;
+const container = $('#maps-container');
 for (const checkbox of $$('#controls input[type=checkbox]')) {
 	checkbox.addEventListener('change', (e) => {
+		displayedMapsCount += (e.target as HTMLInputElement).checked ? 1 : -1;
+		container.dataset.displayedMaps = displayedMapsCount.toString();
+
 		// Timeout lets the map be hidden before we invalidate the sizes,
 		// which reduces lag
 		setTimeout(() => {

@@ -1,9 +1,10 @@
 import viewer from './client/viewer.html';
 
-const PUBLIC_GEO_FILES = {
-	sido: '../southkorea-maps/kostat/2018/json/skorea-provinces-2018-topo.json',
-	sgg: '../southkorea-maps/kostat/2018/json/skorea-municipalities-2018-topo.json',
-	emdong: '../southkorea-maps/kostat/2018/json/skorea-submunicipalities-2018-topo.json'
+const PUBLIC_GEO_FILES: Record<string, string> = {
+	sido: '../data/topo/sido.json',
+	sgg: '../data/topo/sgg.json',
+	emdong: '../data/topo/emdong.json',
+	li: '../data/topo/li.json'
 };
 
 const server = Bun.serve({

@@ -3,6 +3,7 @@ body {
 	--show-sido: none;
 	--show-sgg: none;
 	--show-emdong: none;
+	--show-li: none;
 	padding: 0;
 	margin: 0;
 }
@@ -16,6 +17,9 @@ body:has(#show-sgg:checked) {
 }
 body:has(#show-emdong:checked) {
 	--show-emdong: block;
+}
+body:has(#show-li:checked) {
+	--show-li: block;
 }
 
 #loading {
@@ -55,8 +59,9 @@ body:has(#show-emdong:checked) {
 
 #maps-container {
 	position: relative;
-	display: flex;
-	flex-direction: row;
+	display: grid;
+	grid-template-rows: repeat(auto-fit, minmax(50vh, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(50vw, 1fr));
 	width: 100vw;
 	height: 100vh;
 }
@@ -64,7 +69,6 @@ body:has(#show-emdong:checked) {
 .map {
 	box-sizing: border-box;
 	flex: 1;
-	height: 100vh;
 	border: 1px solid #aaa;
 
 	&#map-sido {
@@ -77,6 +81,9 @@ body:has(#show-emdong:checked) {
 
 	&#map-emdong {
 		display: var(--show-emdong);
+	}
+	&#map-li {
+		display: var(--show-li);
 	}
 }
 
@@ -180,18 +187,6 @@ header {
 }
 
 @media screen and (max-width: 800px) {
-	#maps-container {
-		flex-wrap: wrap;
-	}
-	.map {
-		min-width: 50vw;
-	}
-
-	/* Allows two-way split when all three layers are shown */
-	body:has(#show-sido:checked):has(#show-sgg:checked):has(#show-emdong:checked) .map {
-		height: 50vh;
-	}
-
 	header {
 		gap: 2px;
 		& h1 {

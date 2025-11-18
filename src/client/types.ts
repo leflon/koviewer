@@ -5,8 +5,9 @@ import { FeatureGroup } from 'leaflet';
  * - `sido`: Provinces and metropolitan cities
  * - `sgg`: Cities, counties and districts
  * - `emdong`: Sub-municipal level
+ * - `li`: Villages
  */
-export type MapLevel = 'sido' | 'sgg' | 'emdong';
+export type MapLevel = 'sido' | 'sgg' | 'emdong' | 'li';
 
 /**
  * Map of layers by name
