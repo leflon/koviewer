@@ -21,7 +21,7 @@ for (const name of DEPRECATED_CACHES) {
 }
 //#endregion
 
-//#region Initialize maps 
+//#region Initialize maps
 console.log('Loading data...');
 
 const datasets = {
@@ -85,23 +85,22 @@ const mouseDown = {
 	li: false
 };
 
-$$('#maps-container .map').forEach(map => {
+$$('#maps-container .map').forEach((map) => {
 	const level = map.id.slice(4) as MapLevel;
 
 	// This feeds the mouseDown record
-	map.addEventListener('mousedown', () => mouseDown[level] = true);
-	map.addEventListener('mouseup', () => mouseDown[level] = false);
+	map.addEventListener('mousedown', () => (mouseDown[level] = true));
+	map.addEventListener('mouseup', () => (mouseDown[level] = false));
 
 	// Ensures all tooltips are hidden when the mouse leaves a map, so we don't have stuck tooltips
 	map.addEventListener('mouseleave', () => {
 		mouseDown[level] = false;
-		// We have to dispatch the event to the actual Leaflet map canvas, so that the underlying 
+		// We have to dispatch the event to the actual Leaflet map canvas, so that the underlying
 		// features also receive the event and unhighlight themselves, causing the tooltips to hide
 		$(`#map-${level} .leaflet-map-pane canvas`).dispatchEvent(new MouseEvent('mouseout'));
 		// Also hide the tooltip of the higher map (and by cascade, all higher maps) by simulating mouseleave on them
 		const higherMap = $(`#map-${getHigherLevel(level)}`);
-		if (higherMap)
-			higherMap.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+		if (higherMap) higherMap.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
 	});
 
 	(<HTMLDivElement>map).addEventListener('mousemove', (e) => {
@@ -115,18 +114,17 @@ $$('#maps-container .map').forEach(map => {
 			bottom: mapRect.bottom
 		};
 		const tooltip = $(`#tooltips-container .tooltip[data-bind="${level}"]`);
-		const rect = tooltip.getBoundingClientRect();
+		const toolTipRect = tooltip.getBoundingClientRect();
 		// Position the tooltip's center relative to the cursor, 30px below it
-		let x = e.clientX - rect.width / 2;
-		let y = e.clientY - rect.height / 2 + 30;
+		let x = e.clientX - toolTipRect.width / 2;
+		let y = e.clientY - toolTipRect.height / 2 + 30;
 		// Apply tooltip boundary limits
-		if (x + rect.width >= LIMITS.right) x = LIMITS.right - rect.width;
+		if (x + toolTipRect.width >= LIMITS.right) x = LIMITS.right - toolTipRect.width;
 		if (x <= LIMITS.left) x = LIMITS.left;
-		if (y + rect.height >= LIMITS.bottom) y = LIMITS.bottom - rect.height;
+		if (y + toolTipRect.height >= LIMITS.bottom) y = LIMITS.bottom - toolTipRect.height;
 		if (y <= LIMITS.top) y = LIMITS.top;
 		tooltip.style.top = y + 'px';
 		tooltip.style.left = x + 'px';
-
 
 		/* Simulate the same event on other maps to move their tooltips as well */
 		// Don't do this if the mouse is down, to avoid interfering with drag interactions
@@ -140,8 +138,9 @@ $$('#maps-container .map').forEach(map => {
 
 		// The tooltip is positioned relative to the whole viewport,
 		// so we need to project the mouse position onto the map
-		const newClientX = higherMapRect.left + e.layerX;
-		const newClientY = higherMapRect.top + e.layerY;
+		// We can't use layerX/layerY
+		const newClientX = higherMapRect.left + e.clientX - mapRect.left;
+		const newClientY = higherMapRect.top + e.clientY - mapRect.top;
 		const canvas = $(`#map-${higherLevel} .leaflet-map-pane canvas`) as HTMLCanvasElement;
 		const event = new MouseEvent('mousemove', {
 			clientX: newClientX,
@@ -152,7 +151,6 @@ $$('#maps-container .map').forEach(map => {
 	});
 });
 //#endregion
-
 
 //#region Search functionality
 const resultsContainer = $('#search-results');
