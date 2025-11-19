@@ -14,12 +14,12 @@ export const TOPOLOGY_OBJECTS_KEY: Record<MapLevel, string> = {
 /**
  * The name of the current cache storage
  */
-export const CACHE_NAME = 'geojson-cache-v3';
+export const CACHE_NAME = 'geojson-cache-v4';
 
 /**
  * The names of the previous versions' cache storages
  */
-export const DEPRECATED_CACHES = ['geojson-cache-v1', 'geojson-cache-v2'];
+export const DEPRECATED_CACHES = ['geojson-cache-v1', 'geojson-cache-v2', 'geojson-cache-v3'];
 
 /**
  * The default coordinates to center the maps at. (in this case, about the center of the south-korean peninsula)
