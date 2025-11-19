@@ -15,9 +15,11 @@ body:has(#show-sido:checked) {
 body:has(#show-sgg:checked) {
 	--show-sgg: block;
 }
+
 body:has(#show-emdong:checked) {
 	--show-emdong: block;
 }
+
 body:has(#show-li:checked) {
 	--show-li: block;
 }
@@ -39,6 +41,7 @@ body:has(#show-li:checked) {
 	color: #fff;
 	z-index: 1000000;
 }
+
 #loading .spinner {
 	border: 8px solid #fff;
 	border-top: 8px solid transparent;
@@ -52,6 +55,7 @@ body:has(#show-li:checked) {
 	0% {
 		transform: rotate(0deg);
 	}
+
 	100% {
 		transform: rotate(360deg);
 	}
@@ -62,6 +66,7 @@ body:has(#show-li:checked) {
 	width: 100vw;
 	height: 100vh;
 }
+
 #tooltips-container {
 	position: absolute;
 	top: 0;
@@ -90,16 +95,17 @@ body:has(#show-li:checked) {
 	flex-flow: wrap row;
 	width: 100%;
 	height: 100%;
-	&[data-displayed-maps='3'] {
-		/* First child is the tooltip */
-		& .map:nth-child(4), & .map:nth-child(5) {
-			width: 100%;
-		}
+
+	&[data-displayed-maps='3'] .map {
+		width: 33%;
+		height: 100%;
 	}
+
 	&[data-displayed-maps='2'] .map {
 		width: 50%;
 		height: 100%;
 	}
+
 	&[data-displayed-maps='1'] .map {
 		width: 100%;
 		height: 100%;
@@ -123,6 +129,7 @@ body:has(#show-li:checked) {
 	&#map-emdong {
 		display: var(--show-emdong);
 	}
+
 	&#map-li {
 		display: var(--show-li);
 	}
@@ -138,6 +145,7 @@ body:has(#show-li:checked) {
 	background: #0004;
 	z-index: 9999;
 }
+
 .map[data-loading='true']::after {
 	content: '';
 	position: absolute;
@@ -153,6 +161,7 @@ body:has(#show-li:checked) {
 	border-radius: 50%;
 	animation: spin 1s linear infinite;
 }
+
 .map[data-loading='false']::before {
 	content: attr(data-name);
 	position: absolute;
@@ -201,15 +210,19 @@ header {
 		max-height: 100px;
 		overflow-y: auto;
 		box-shadow: 0px 0px 5px #0002;
+
 		&:has(.search-result) {
 			/* Display border only when search results are present, to avoid ugly floating gray bar */
 			border: 1px solid #bbb;
 		}
+
 		border-radius: 4px;
+
 		& .search-result {
 			box-sizing: border-box;
 			padding: 5px 4px;
 			cursor: pointer;
+
 			&:hover {
 				background: #eee;
 			}
@@ -220,6 +233,7 @@ header {
 @media screen and (max-width: 800px) {
 	header {
 		gap: 2px;
+
 		& h1 {
 			font-size: 1em;
 		}
