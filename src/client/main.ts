@@ -54,9 +54,10 @@ for (const map of Object.values(maps)) {
 }
 
 /* Bind settings UI */
-let displayedMapsCount = 4;
+let displayedMapsCount = 0;
 const container = $('#maps-container');
 for (const checkbox of $$('#controls input[type=checkbox]')) {
+	if ((checkbox as HTMLInputElement).checked) displayedMapsCount++;
 	checkbox.addEventListener('change', (e) => {
 		displayedMapsCount += (e.target as HTMLInputElement).checked ? 1 : -1;
 		container.dataset.displayedMaps = displayedMapsCount.toString();
@@ -68,6 +69,7 @@ for (const checkbox of $$('#controls input[type=checkbox]')) {
 		});
 	});
 }
+container.dataset.displayedMaps = displayedMapsCount.toString();
 
 /* Bind tooltip to mouse position */
 $('#maps-container').addEventListener('mousemove', (e) => {
