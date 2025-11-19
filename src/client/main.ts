@@ -15,12 +15,13 @@ import {
 } from './functions';
 import { MapLevel } from './types';
 
-/* Clear potential previous versions caches */
+//#region Clear deprecated caches
 for (const name of DEPRECATED_CACHES) {
 	caches.delete(name);
 }
+//#endregion
 
-/* Initialize maps */
+//#region Initialize maps 
 console.log('Loading data...');
 
 const datasets = {
@@ -45,7 +46,7 @@ for (const [level, promise] of Object.entries(datasets)) {
 	});
 }
 
-/* Sync maps */
+// Sync maps
 for (const map of Object.values(maps)) {
 	for (const otherMap of Object.values(maps)) {
 		if (map !== otherMap) {
@@ -53,8 +54,9 @@ for (const map of Object.values(maps)) {
 		}
 	}
 }
+//#endregion
 
-/* Bind settings UI */
+//#region Bind settings UI
 let displayedMapsCount = 0;
 const container = $('#maps-container');
 for (const checkbox of $$('#controls input[type=checkbox]')) {
@@ -71,43 +73,88 @@ for (const checkbox of $$('#controls input[type=checkbox]')) {
 	});
 }
 container.dataset.displayedMaps = displayedMapsCount.toString();
+//#endregion
 
-/* Bind tooltips to mouse position */
+//#region Bind tooltips to mouse position
 
-$$('#maps-container .map').forEach(map => (<HTMLDivElement>map).addEventListener('mousemove', (e) => {
+// Track mouse down state to avoid conflicting with Leaflet drag interactions
+const mouseDown = {
+	sido: false,
+	sgg: false,
+	emdong: false,
+	li: false
+};
+
+$$('#maps-container .map').forEach(map => {
 	const level = map.id.slice(4) as MapLevel;
-	const tooltip = $(`#tooltips-container .tooltip[data-bind="${level}"]`);
-	const rect = tooltip.getBoundingClientRect();
-	// Position the tooltip's center relative to the cursor, 30px below it
-	let x = e.clientX - rect.width / 2;
-	let y = e.clientY - rect.height / 2 + 30;
-	// Prevent tooltip from clipping out of the viewport
-	if (x + rect.width >= window.innerWidth) x = window.innerWidth - rect.width;
-	if (x <= 0) x = 0;
-	if (y + rect.height >= window.innerHeight) y = window.innerHeight - rect.height;
-	if (y <= 0) y = 0;
-	tooltip.style.top = y + 'px';
-	tooltip.style.left = x + 'px';
+
+	// This feeds the mouseDown record
+	map.addEventListener('mousedown', () => mouseDown[level] = true);
+	map.addEventListener('mouseup', () => mouseDown[level] = false);
+
+	// Ensures all tooltips are hidden when the mouse leaves a map, so we don't have stuck tooltips
+	map.addEventListener('mouseleave', () => {
+		mouseDown[level] = false;
+		// We have to dispatch the event to the actual Leaflet map canvas, so that the underlying 
+		// features also receive the event and unhighlight themselves, causing the tooltips to hide
+		$(`#map-${level} .leaflet-map-pane canvas`).dispatchEvent(new MouseEvent('mouseout'));
+		// Also hide the tooltip of the higher map (and by cascade, all higher maps) by simulating mouseleave on them
+		const higherMap = $(`#map-${getHigherLevel(level)}`);
+		if (higherMap)
+			higherMap.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+	});
+
+	(<HTMLDivElement>map).addEventListener('mousemove', (e) => {
+		const level = map.id.slice(4) as MapLevel;
+		const mapRect = map.getBoundingClientRect();
+		// A tooltip should never go outside its map's boundaries
+		const LIMITS = {
+			left: mapRect.left,
+			top: mapRect.top,
+			right: mapRect.right,
+			bottom: mapRect.bottom
+		};
+		const tooltip = $(`#tooltips-container .tooltip[data-bind="${level}"]`);
+		const rect = tooltip.getBoundingClientRect();
+		// Position the tooltip's center relative to the cursor, 30px below it
+		let x = e.clientX - rect.width / 2;
+		let y = e.clientY - rect.height / 2 + 30;
+		// Apply tooltip boundary limits
+		if (x + rect.width >= LIMITS.right) x = LIMITS.right - rect.width;
+		if (x <= LIMITS.left) x = LIMITS.left;
+		if (y + rect.height >= LIMITS.bottom) y = LIMITS.bottom - rect.height;
+		if (y <= LIMITS.top) y = LIMITS.top;
+		tooltip.style.top = y + 'px';
+		tooltip.style.left = x + 'px';
 
 
-	/* Simulate the same event on other maps to move their tooltips as well */
-	const higherLevel = getHigherLevel(level);
-	if (!higherLevel) return;
-	const higherMap = <HTMLDivElement>$(`#map-${higherLevel}`);
-	const higherMapRect = higherMap.getBoundingClientRect();
+		/* Simulate the same event on other maps to move their tooltips as well */
+		// Don't do this if the mouse is down, to avoid interfering with drag interactions
+		if (mouseDown[level]) return;
 
-	const newClientX = higherMapRect.left + e.layerX;
-	const newClientY = higherMapRect.top + e.layerY;
-	const canvas = $(`#map-${higherLevel} .leaflet-map-pane canvas`) as HTMLCanvasElement;
-	canvas.dispatchEvent(new MouseEvent('mousemove', {
-		clientX: newClientX,
-		clientY: newClientY, 
-		bubbles: true
-	}));
-}));
+		const higherLevel = getHigherLevel(level);
+		// When mouse is on the highest map, there's no higher map to sync to
+		if (!higherLevel) return;
+		const higherMapDOM = <HTMLDivElement>$(`#map-${higherLevel}`);
+		const higherMapRect = higherMapDOM.getBoundingClientRect();
+
+		// The tooltip is positioned relative to the whole viewport,
+		// so we need to project the mouse position onto the map
+		const newClientX = higherMapRect.left + e.layerX;
+		const newClientY = higherMapRect.top + e.layerY;
+		const canvas = $(`#map-${higherLevel} .leaflet-map-pane canvas`) as HTMLCanvasElement;
+		const event = new MouseEvent('mousemove', {
+			clientX: newClientX,
+			clientY: newClientY,
+			bubbles: true
+		});
+		canvas.dispatchEvent(event);
+	});
+});
+//#endregion
 
 
-/* Handle search features */
+//#region Search functionality
 const resultsContainer = $('#search-results');
 const input = $('#search-input') as HTMLInputElement;
 
@@ -172,3 +219,4 @@ input.addEventListener('input', (e) => {
 		resultsContainer.appendChild(elm);
 	}
 });
+//#endregion
