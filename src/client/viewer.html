@@ -1,50 +1,292 @@
 <!doctype html>
 <html>
+	<head>
+		<title>한국 행정 구역 뷰어</title>
+		<meta charset="utf-8" />
+		<link rel="stylesheet" href="assets/style.css" />
+		<link rel="stylesheet" href="leaflet/dist/leaflet.css" />
+		<script src="scripts/constants.ts" type="module"></script>
+		<script src="scripts/functions.ts" type="module"></script>
+		<script src="scripts/main.ts" type="module" defer></script>
+		<meta name="viewport" content="width=device-width, user-scalable=no" />
+	</head>
 
-<head>
-	<title>한국 행정 구역 뷰어</title>
-	<meta charset="utf-8" />
-	<link rel="stylesheet" href="style.css" />
-	<link rel="stylesheet" href="leaflet/dist/leaflet.css" />
-	<script src="constants.ts" type="module"></script>
-	<script src="functions.ts" type="module"></script>
-	<script src="main.ts" type="module" defer></script>
-	<meta name="viewport" content="width=device-width, user-scalable=no" />
-</head>
-
-<body>
-	<header>
-		<h1>한국 행정 구역 뷰어</h1>
-		<div id="controls">
-			<label for="show-sido"> <input type="checkbox" id="show-sido" data-level="sido" checked /> 시도 </label>
-			<label for="show-sgg"> <input type="checkbox" id="show-sgg" data-level="sgg" checked /> 시군구 </label>
-			<label for="show-emdong">
-				<input type="checkbox" id="show-emdong" data-level="emdong" checked /> 읍면동
+	<body>
+		<header>
+			<h1>한국 행정 구역 뷰어</h1>
+			<div id="controls">
+				<label for="show-sido"> <input type="checkbox" id="show-sido" data-level="sido" checked /> 시도 </label>
+				<label for="show-sgg"> <input type="checkbox" id="show-sgg" data-level="sgg" checked /> 시군구 </label>
+				<label for="show-emdong">
+					<input type="checkbox" id="show-emdong" data-level="emdong" checked /> 읍면동
+				</label>
+				<label for="show-li"> <input type="checkbox" id="show-li" data-level="li" checked /> 리 </label>
+			</div>
+			<div id="search">
+				<input type="search" id="search-input" placeholder="검색" />
+				<!-- Prevent focus on the container to allow direct focus on individual results -->
+				<div id="search-results" tabindex="-1"></div>
+			</div>
+			<div id="info-modal-open">
+				<input type="checkbox" id="show-modal" />
+				<label for="show-modal">
+					<img src="assets/info.svg" alt="Open informations" height="24" />
+				</label>
+			</div>
+		</header>
+		<div id="main-viewer">
+			<div id="tooltips-container">
+				<div class="tooltip" data-bind="sido"></div>
+				<div class="tooltip" data-bind="sgg"></div>
+				<div class="tooltip" data-bind="emdong"></div>
+				<div class="tooltip" data-bind="li"></div>
+			</div>
+			<div id="maps-container">
+				<div class="map" id="map-sido" data-loading="true" data-name="시도"></div>
+				<div class="map" id="map-sgg" data-loading="true" data-name="시군구"></div>
+				<div class="map" id="map-emdong" data-loading="true" data-name="읍면동"></div>
+				<div class="map" id="map-li" data-loading="true" data-name="리"></div>
+			</div>
+		</div>
+		<div id="info-container">
+			<label for="show-modal" id="close-modal">
+				<img src="assets/close.svg" alt="Close" height="32" />
 			</label>
-			<label for="show-li">
-				<input type="checkbox" id="show-li" data-level="li" checked /> 리
-			</label>
+			<div id="info-modal">
+				<h1>South Korea administrative divisions</h1>
+				<h2>Upper-level local autonomy (시도)</h2>
+				<p>
+					<strong>시도</strong> (<em>Sido</em>) represents the highest tier of local government in South
+					Korea, functioning as the primary administrative division below the central government. This level
+					possesses significant autonomy and is legally distinct as a broad-scale regional authority.
+					Administratively, it is responsible for handling affairs that span wide geographic areas, such as
+					regional transportation planning, environmental conservation, and high-level education policies.
+					Governance is democratic; residents directly elect the head of the local government and members of
+					the local council every four years. The administrative center is usually a large complex, and
+					citizens typically visit here only for major regulatory issues, passport services (though often
+					delegated), or region-wide complaints, as day-to-day affairs are handled at lower levels.
+				</p>
+				<h3>
+					<a
+						href="https://en.wikipedia.org/wiki/Provinces_of_South_Korea"
+						target="_blank"
+						rel="noopener noreferrer"
+						>도 (<em>Do</em>)</a
+					>
+				</h3>
+				<p>
+					<strong>도</strong> (<em>Do</em>) refers to a Province, which is the traditional regional unit
+					covering large geographic territories with a mix of urban and rural populations. There are 9 of
+					them, including 3 <em>Special self-governing provinces.&nbsp;</em>Legally, a Province is led by a
+					Governor (<a
+						href="https://krdict.korean.go.kr/eng/dicMarinerSearch/search?mainSearchWord=도지사"
+						target="_blank"
+						rel="noopener noreferrer"
+						><em>Dojisa</em></a
+					>) who is elected by popular vote, alongside a Provincial Council that acts as the legislative
+					check. Administratively, the provincial government manages the coordination between the central
+					government and the smaller cities or counties within its jurisdiction. It focuses on balanced
+					regional development, agriculture, and infrastructure that connects its various sub-divisions.
+				</p>
+				<p>
+					The South Korean administrative system also maintains a symbolic claim over northern territory
+					through the
+					<strong>이북5도</strong> (<em>Ibuk-5-do</em>), or the Five Northern Provinces. Managed by the
+					<a
+						href="https://en.wikipedia.org/wiki/Committee_for_the_Five_Northern_Korean_Provinces"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						<strong>이북5도위원회</strong> (<em>Committee for the Five Northern Korean Provinces</em>) </a
+					>, these entities are legally defined by the
+					<a
+						href="https://ko.wikipedia.org/wiki/일제강점기의_행정_구역#도(道)"
+						target="_blank"
+						rel="noopener noreferrer"
+						>administrative boundaries of 1945 (ko)</a
+					>, strictly ignoring changes made by the North Korean regime. As the South possesses no de facto
+					control over this land, the honorary governors are formally appointed by the President of the
+					Republic of Korea and their role is not territorial governance. Instead, their administrative
+					mandate is centered on supporting the community of displaced families and North Korean defectors
+					currently residing in the South, preserving their regional cultural heritage, and maintaining the
+					legal framework for potential future reunification.
+				</p>
+				<h3>
+					<a
+						href="https://en.wikipedia.org/wiki/List_of_provincial-level_cities_of_South_Korea"
+						target="_blank"
+						rel="noopener noreferrer"
+						>시 (<em>Si</em>)</a
+					>
+				</h3>
+				<p>
+					<strong>시</strong> (<em>Si</em>) at this level refers to Special Cities, Metropolitan Cities, or
+					Special Self-Governing Cities, which are administratively equivalent to a Province but are
+					distinctively urban. These entities, such as Seoul or Busan, are led by a Mayor (<a
+						href="https://krdict.korean.go.kr/eng/dicMarinerSearch/search?mainSearchWord=시장"
+						target="_blank"
+						rel="noopener noreferrer"
+						><em>Sijang</em></a
+					>) rather than a Governor, but they possess the same legal standing and autonomy as a Province. They
+					manage high-density urban planning, public transit systems like subways, and city-wide zoning.
+					Residents elect the Mayor and City Council members directly, and the administration is tailored to
+					the complexities of managing massive metropolitan populations independent of a surrounding province.
+				</p>
+				<h2>Lower-level local autonomy (시군구)</h2>
+				<p>
+					<strong>시군구</strong> (<em>Sigungu</em>) serves as the basic local government unit and is the tier
+					where most direct interaction between the government and the people occurs. Legally, this level has
+					its own autonomous status (except for non-autonomous districts in certain cities) with independent
+					budgets and powers delegated by the upper <em>Sido</em> level. Administratively, these units are
+					responsible for the majority of civil registrations, such as birth and marriage certificates, local
+					tax collection, land registration, and sanitation. Residents generally feel a stronger connection to
+					this level of government for daily needs.
+				</p>
+				<h3>시 (<em>Si</em>)</h3>
+				<p>
+					<a
+						href="https://en.wikipedia.org/wiki/List_of_cities_in_South_Korea"
+						target="_blank"
+						rel="noopener noreferrer"
+						><strong>시</strong> (<em>Si</em>)</a
+					>
+					at this tier is a specific administrative designation for a City that has a population typically
+					over 50,000 and an urbanized structure, situated within a Province. It is led by an elected Mayor
+					and monitored by a City Council. Legally, it operates independently from the county system and
+					manages its own urban development, water supply, and local economic promotion. If the population
+					exceeds 500,000, it may receive additional administrative powers similar to a metropolitan city,
+					allowing it to manage its own districts, though it remains under the provincial jurisdiction.
+				</p>
+				<h3>군 (<em>Gun</em>)</h3>
+				<p>
+					<a
+						href="https://en.wikipedia.org/wiki/Gun_(administrative_division)"
+						target="_blank"
+						rel="noopener noreferrer"
+						><strong>군</strong> (<em>Gun</em>)</a
+					>
+					is a County, predominantly finding its place in rural areas or less urbanized regions within a
+					Province or sometimes within a Metropolitan City. It is governed by an elected County Governor (<a
+						href="https://krdict.korean.go.kr/eng/dicMarinerSearch/search?mainSearchWord=군수"
+						target="_blank"
+						rel="noopener noreferrer"
+						><em>Gunsu</em></a
+					>) and a County Council. Administratively, the focus here is heavily tilted toward agriculture,
+					forestry, and rural development support. The population density is lower than in a <em>Si</em>, and
+					the administrative services often include substantial support for farming communities and preserving
+					local traditions and landscapes.
+				</p>
+				<h3>구 (<em>Gu</em>)</h3>
+				<p>
+					<a
+						href="https://en.wikipedia.org/wiki/List_of_districts_in_South_Korea"
+						target="_blank"
+						rel="noopener noreferrer"
+						><strong>구</strong> (<em>Gu</em>)</a
+					>
+					is a District found strictly within larger cities. There is a critical legal distinction here: in
+					Special or Metropolitan Cities (like Seoul), these are &quot;Autonomous Districts&quot;
+					(<em>Jachigu</em>) where residents elect a District Mayor (<a
+						href="https://krdict.korean.go.kr/eng/dicMarinerSearch/search?mainSearchWord=구청"
+						target="_blank"
+						rel="noopener noreferrer"
+						><em>Gucheong</em></a
+					><a
+						href="https://krdict.korean.go.kr/eng/dicMarinerSearch/search?mainSearchWord=장#:~:text=head"
+						target="_blank"
+						rel="noopener noreferrer"
+						><em>jang</em></a
+					>) and Council, possessing their own taxation powers and local autonomy. However, in large regular
+					Cities, these are &quot;Administrative Districts&quot; (<em>Ilbangu</em>) which are merely
+					non-autonomous branches of the city government used to improve administrative efficiency. In these
+					cases, the head is an appointed official, not elected, and there is no district council. Residents
+					visit the District Office for passport applications, parking permits, and social welfare
+					registration.
+				</p>
+				<h2>Subordinate Administrative Level (읍면동)</h2>
+				<p>
+					<strong>읍면동</strong> (<em>Eupmyeondong</em>) acts as the supplementary administrative unit
+					comprising the sub-divisions of the <em>Sigungu</em>. This level is strictly administrative and
+					legally non-autonomous, meaning there are no local elections held for these positions. The heads of
+					these divisions are career civil servants appointed by the Mayor or County Governor. The primary
+					function of this level is to act as the terminal administrative capillary, delivering welfare
+					benefits, handling resident registration (move-in reports), and issuing various civil documents
+					directly to the public.
+				</p>
+				<h3>읍 (<em>Eup</em>)</h3>
+				<p>
+					<a
+						href="https://en.wikipedia.org/wiki/Eup_(administrative_division)"
+						target="_blank"
+						rel="noopener noreferrer"
+						><strong>읍</strong> (<em>Eup</em>)</a
+					>
+					is a Town division, typically serving as the center of commerce and population within a rural County
+					(<em>Gun</em>) or a localized urban center within a mixed City. To be designated as an <em>Eup</em>,
+					the area usually needs a population of at least 20,000 and a distinct urbanized street grid.
+					Administratively, the <em>Eup</em> office handles tasks similar to the <em>Myeon</em> but on a
+					slightly larger scale due to the higher population density, often managing waste disposal
+					coordination and local public facility maintenance.
+				</p>
+				<h3>면 (<em>Myeon</em>)</h3>
+				<p>
+					<a
+						href="https://en.wikipedia.org/wiki/Myeon_(administrative_division)"
+						target="_blank"
+						rel="noopener noreferrer"
+						><strong>면</strong> (<em>Myeon</em>)</a
+					>
+					is a Township, representing the rural countryside within a County or City. It typically has a lower
+					population density than an <em>Eup</em> and is composed primarily of farming or fishing communities.
+					The <em>Myeon</em> office serves as the administrative hub for a wide geographic area of scattered
+					villages. The appointed Head of <em>Myeon</em> focuses on agricultural support, disaster prevention
+					in rural areas (like flood control), and coordinating social services for elderly residents who make
+					up a large portion of the demographic.
+				</p>
+				<h3>동 (<em>Dong</em>)</h3>
+				<p>
+					<a
+						href="https://en.wikipedia.org/wiki/Dong_(administrative_division)"
+						target="_blank"
+						rel="noopener noreferrer"
+						><strong>동</strong> (<em>Dong</em>)</a
+					>
+					is a Neighborhood division found in urban Districts (<em>Gu</em>) or Cities (<em>Si</em>). It is the
+					smallest urban administrative unit where the &quot;Community Service Center&quot; (often called the
+					Happy Community Center) is located. This is the most frequented government office for urban
+					residents to register residency, obtain seal certificates
+				</p>
+				<h2>Village level (리)</h2>
+				<p>
+					<a
+						href="https://en.wikipedia.org/wiki/Ri_(administrative_division)"
+						target="_blank"
+						rel="noopener noreferrer"
+						><strong>리</strong> (<em>Ri</em>)</a
+					>
+					is the Village unit, serving as the smallest subdivision of rural towns (<em>Eup</em>) and townships
+					(<em>Myeon</em>). Unlike the urban <em>Dong</em>, the <em>Ri</em> is a natural village settlement.
+					While not a fully autonomous level of government, it has a unique administrative role where the
+					Village Head (<em>Ijang</em>) acts as a liaison. The <em>Ijang</em> is typically selected by the
+					villagers (often via a village meeting or consensus) and formally appointed by the <em>Eup</em>/<em
+						>Myeon</em
+					>
+					head. There is no government office building for a <em>Ri</em>; instead, the focus is on the
+					&quot;Village Hall&quot; (<a
+						href="https://krdict.korean.go.kr/eng/dicMarinerSearch/search?mainSearchWord=마을"
+						target="_blank"
+						rel="noopener noreferrer"
+						><em>Maeul</em></a
+					><em>&nbsp;</em
+					><a
+						href="https://krdict.korean.go.kr/eng/dicMarinerSearch/search?mainSearchWord=회관"
+						target="_blank"
+						rel="noopener noreferrer"
+						><em>Hoegwan</em></a
+					>), which acts as a communal gathering space for seniors and a venue for village meetings regarding
+					agricultural cooperation or community events.
+				</p>
+			</div>
 		</div>
-		<div id="search">
-			<input type="search" id="search-input" placeholder="검색" />
-			<!-- Prevent focus on the container to allow direct focus on individual results -->
-			<div id="search-results" tabindex="-1"></div>
-		</div>
-	</header>
-	<div id="main-viewer">
-		<div id="tooltips-container">
-			<div class="tooltip" data-bind="sido"></div>
-			<div class="tooltip" data-bind="sgg"></div>
-			<div class="tooltip" data-bind="emdong"></div>
-			<div class="tooltip" data-bind="li"></div>
-		</div>
-		<div id="maps-container">
-			<div class="map" id="map-sido" data-loading="true" data-name="시도"></div>
-			<div class="map" id="map-sgg" data-loading="true" data-name="시군구"></div>
-			<div class="map" id="map-emdong" data-loading="true" data-name="읍면동"></div>
-			<div class="map" id="map-li" data-loading="true" data-name="리"></div>
-		</div>
-	</div>
-</body>
-
+	</body>
 </html>
