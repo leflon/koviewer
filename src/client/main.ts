@@ -7,6 +7,7 @@ import {
 	blurFeature,
 	createMap,
 	findFeaturesByName,
+	getHigherLevel,
 	highlightFeature,
 	initMap,
 	jumpTo,
@@ -71,9 +72,11 @@ for (const checkbox of $$('#controls input[type=checkbox]')) {
 }
 container.dataset.displayedMaps = displayedMapsCount.toString();
 
-/* Bind tooltip to mouse position */
-$('#maps-container').addEventListener('mousemove', (e) => {
-	const tooltip = $('#tooltip');
+/* Bind tooltips to mouse position */
+
+$$('#maps-container .map').forEach(map => (<HTMLDivElement>map).addEventListener('mousemove', (e) => {
+	const level = map.id.slice(4) as MapLevel;
+	const tooltip = $(`#tooltips-container .tooltip[data-bind="${level}"]`);
 	const rect = tooltip.getBoundingClientRect();
 	// Position the tooltip's center relative to the cursor, 30px below it
 	let x = e.clientX - rect.width / 2;
@@ -85,7 +88,24 @@ $('#maps-container').addEventListener('mousemove', (e) => {
 	if (y <= 0) y = 0;
 	tooltip.style.top = y + 'px';
 	tooltip.style.left = x + 'px';
-});
+
+
+	/* Simulate the same event on other maps to move their tooltips as well */
+	const higherLevel = getHigherLevel(level);
+	if (!higherLevel) return;
+	const higherMap = <HTMLDivElement>$(`#map-${higherLevel}`);
+	const higherMapRect = higherMap.getBoundingClientRect();
+
+	const newClientX = higherMapRect.left + e.layerX;
+	const newClientY = higherMapRect.top + e.layerY;
+	const canvas = $(`#map-${higherLevel} .leaflet-map-pane canvas`) as HTMLCanvasElement;
+	canvas.dispatchEvent(new MouseEvent('mousemove', {
+		clientX: newClientX,
+		clientY: newClientY, 
+		bubbles: true
+	}));
+}));
+
 
 /* Handle search features */
 const resultsContainer = $('#search-results');

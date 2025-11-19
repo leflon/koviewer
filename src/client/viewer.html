@@ -1,40 +1,50 @@
 <!doctype html>
 <html>
-	<head>
-		<title>한국 행정 구역 뷰어</title>
-		<meta charset="utf-8" />
-		<link rel="stylesheet" href="style.css" />
-		<link rel="stylesheet" href="leaflet/dist/leaflet.css" />
-		<script src="constants.ts" type="module"></script>
-		<script src="functions.ts" type="module"></script>
-		<script src="main.ts" type="module" defer></script>
-		<meta name="viewport" content="width=device-width, user-scalable=no" />
-	</head>
-	<body>
-		<header>
-			<h1>한국 행정 구역 뷰어</h1>
-			<div id="controls">
-				<label for="show-sido"> <input type="checkbox" id="show-sido" data-level="sido" checked /> 시도 </label>
-				<label for="show-sgg"> <input type="checkbox" id="show-sgg" data-level="sgg" checked /> 시군구 </label>
-				<label for="show-emdong">
-					<input type="checkbox" id="show-emdong" data-level="emdong" checked /> 읍면동
-				</label>
-				<label for="show-li">
-					<input type="checkbox" id="show-li" data-level="li" checked /> 리
-				</label>
-			</div>
-			<div id="search">
-				<input type="search" id="search-input" placeholder="검색" />
-				<!-- Prevent focus on the container to allow direct focus on individual results -->
-				<div id="search-results" tabindex="-1"></div>
-			</div>
-		</header>
+
+<head>
+	<title>한국 행정 구역 뷰어</title>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="style.css" />
+	<link rel="stylesheet" href="leaflet/dist/leaflet.css" />
+	<script src="constants.ts" type="module"></script>
+	<script src="functions.ts" type="module"></script>
+	<script src="main.ts" type="module" defer></script>
+	<meta name="viewport" content="width=device-width, user-scalable=no" />
+</head>
+
+<body>
+	<header>
+		<h1>한국 행정 구역 뷰어</h1>
+		<div id="controls">
+			<label for="show-sido"> <input type="checkbox" id="show-sido" data-level="sido" checked /> 시도 </label>
+			<label for="show-sgg"> <input type="checkbox" id="show-sgg" data-level="sgg" checked /> 시군구 </label>
+			<label for="show-emdong">
+				<input type="checkbox" id="show-emdong" data-level="emdong" checked /> 읍면동
+			</label>
+			<label for="show-li">
+				<input type="checkbox" id="show-li" data-level="li" checked /> 리
+			</label>
+		</div>
+		<div id="search">
+			<input type="search" id="search-input" placeholder="검색" />
+			<!-- Prevent focus on the container to allow direct focus on individual results -->
+			<div id="search-results" tabindex="-1"></div>
+		</div>
+	</header>
+	<div id="main-viewer">
+		<div id="tooltips-container">
+			<div class="tooltip" data-bind="sido"></div>
+			<div class="tooltip" data-bind="sgg"></div>
+			<div class="tooltip" data-bind="emdong"></div>
+			<div class="tooltip" data-bind="li"></div>
+		</div>
 		<div id="maps-container">
-			<div id="tooltip"></div>
 			<div class="map" id="map-sido" data-loading="true" data-name="시도"></div>
 			<div class="map" id="map-sgg" data-loading="true" data-name="시군구"></div>
 			<div class="map" id="map-emdong" data-loading="true" data-name="읍면동"></div>
 			<div class="map" id="map-li" data-loading="true" data-name="리"></div>
 		</div>
-	</body>
+	</div>
+</body>
+
 </html>

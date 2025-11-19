@@ -20,6 +20,24 @@ export const $ = (selector: string) => document.querySelector(selector) as HTMLE
 export const $$ = (selector: string) => document.querySelectorAll(selector);
 
 /**
+ * Gets the higher administrative level of a given level.
+ * @param level The current level
+ * @returns The higher level, or `null` if the given level is the highest one.
+ */
+export function getHigherLevel(level: MapLevel): MapLevel | null {
+	switch (level) {
+		case 'li':
+			return 'emdong';
+		case 'emdong':
+			return 'sgg';
+		case 'sgg':
+			return 'sido';
+		case 'sido':
+			return null;
+	}
+}
+
+/**
  * Converts a TopoJSON object to GeoJSON
  * @param level The administrative level corresponding to this topography
  * @param topo The topology object to convert
@@ -76,7 +94,7 @@ export function createMap(htmlId: string): L.Map {
  * @param featuresStore The record that will receive all the features from this map
  */
 export async function initMap(map: L.Map, level: MapLevel, features: Feature, featuresStore: Record<string, L.Layer>) {
-	const tooltip = $('#tooltip');
+	const tooltip = $(`#tooltips-container .tooltip[data-bind="${level}"]`);
 	$(`#map-${level}`).dataset.loading = 'false';
 	const baseLayer = L.tileLayer(TILE_LAYER_URI);
 	baseLayer.addTo(map);
@@ -102,8 +120,8 @@ export async function initMap(map: L.Map, level: MapLevel, features: Feature, fe
 					tooltip.textContent = name;
 				},
 				mouseout: (e) => {
-					tooltip.style.display = 'none';
 					blurFeature(e.target);
+					tooltip.style.display = 'none';
 				},
 				click: (e) => {
 					jumpTo(e.target);
