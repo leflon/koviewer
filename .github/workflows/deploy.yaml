@@ -39,7 +39,7 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            source ~/.bashrc
+            source .bashrc
             cd ${{ secrets.APP_PATH }}
             git pull origin master
             bun install --production
