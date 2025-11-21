@@ -74,6 +74,19 @@ for (const checkbox of $$('#controls input[type=checkbox]')) {
 }
 container.dataset.displayedMaps = displayedMapsCount.toString();
 //#endregion
+	
+//#region Allow horizontal scrolling with mouse wheel on controls
+const controls = $('#controls');
+controls.addEventListener('wheel', (e) => {
+	if (e.deltaY === 0) return;
+	e.preventDefault();
+	controls.scrollBy({
+		left: e.deltaY < 0 ? -100 : 100,
+		behavior: 'smooth'
+	});
+});
+//#endregion
+
 
 //#region Bind tooltips to mouse position
 
