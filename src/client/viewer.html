@@ -7,7 +7,7 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link
-		href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
+		href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap&icon_names=searchinfoclosevisibility"
 		rel="stylesheet">
 	<link rel="stylesheet" href="assets/style.css" />
 	<link rel="stylesheet" href="leaflet/dist/leaflet.css" />
@@ -38,8 +38,11 @@
 			<input type="search" id="search-input" placeholder="검색" />
 			<label id="responsive-search-toggle" for="show-search">
 				<input type="checkbox" id="show-search" />
-				<span class="material-symbols-outlined">
+				<span class="material-symbols-outlined" id="search-open-icon">
 					search
+				</span>
+				<span class="material-symbols-outlined" id="search-close-icon">
+					search_off
 				</span>
 			</label>
 			<!-- Prevent focus on the container to allow direct focus on individual results -->

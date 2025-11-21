@@ -205,11 +205,18 @@ header {
 
 @media screen and (max-width: 768px) {
 
-		#search {
+	#search {
 		justify-content: flex-end;
 	}
 	#search #responsive-search-toggle {
 		display: block;
+
+		& #search-open-icon {
+			display: block;
+		}
+		& #search-close-icon {
+			display: none;
+		}
 	}
 	#search input[type="search"] {
 		display: none;
@@ -223,6 +230,15 @@ header {
 
 		& #controls {
 			display: none;
+		}
+
+		& #search #responsive-search-toggle {
+			& #search-open-icon {
+				display: none;
+			}
+			& #search-close-icon {
+				display: block;
+			}
 		}
 	}
 
@@ -256,8 +272,8 @@ header {
 
 #main-viewer {
 	position: relative;
-	width: 100dvw;
-	height: 100dvh;
+	width: 100vw;
+	height: 100vh;
 }
 
 #tooltips-container {
