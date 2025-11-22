@@ -74,7 +74,7 @@ for (const checkbox of $$('#controls input[type=checkbox]')) {
 }
 container.dataset.displayedMaps = displayedMapsCount.toString();
 //#endregion
-	
+
 //#region Allow horizontal scrolling with mouse wheel on controls
 const controls = $('#controls');
 controls.addEventListener('wheel', (e) => {
@@ -86,7 +86,6 @@ controls.addEventListener('wheel', (e) => {
 	});
 });
 //#endregion
-
 
 //#region Bind tooltips to mouse position
 
@@ -196,6 +195,7 @@ input.addEventListener('input', (e) => {
 		const elm = document.createElement('div');
 		elm.className = 'search-result';
 		elm.textContent = name;
+		elm.title = name;
 		elm.setAttribute('tabindex', '0'); // Alows tab focus
 
 		const select = () => {

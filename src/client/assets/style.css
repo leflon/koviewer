@@ -102,15 +102,13 @@ header {
 	color: var(--highlight-color);
 	font-weight: 500;
 	opacity: 0.8;
-	transition: .3s ease;
+	transition: 0.3s ease;
 
 	& input {
-		cursor: pointer;
 		position: fixed;
 		top: -1000px;
 		left: -1000px;
 		opacity: 0;
-
 	}
 
 	&:has(input:checked) {
@@ -126,7 +124,11 @@ header {
 	&::before {
 		content: 'visibility';
 		font-family: 'Material Symbols Outlined';
-		font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+		font-variation-settings:
+			'FILL' 0,
+			'wght' 400,
+			'GRAD' 0,
+			'opsz' 24;
 		margin-right: 4px;
 	}
 
@@ -134,6 +136,19 @@ header {
 		content: 'visibility_off';
 	}
 
+	& .toggle-label-text {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.8em;
+		line-height: 1;
+		padding: 1px 0;
+
+		& .toggle-label-en {
+			font-size: 0.8em;
+		}
+	}
 }
 
 #search {
@@ -144,12 +159,14 @@ header {
 	height: 30px;
 	gap: 2px;
 
-
 	& input {
-		border: 1px solid #eee;
-		border-radius: 2px;
+		border: 1px solid #bbb;
+		border-radius: 4px;
+		padding: 0 8px;
 		margin: 0;
 		display: block;
+		width: 200px;
+
 		height: 100%;
 		outline: none;
 
@@ -178,7 +195,7 @@ header {
 		top: 100%;
 		left: 0;
 		background: #fff;
-		width: 100%;
+		width: 200px;
 		color: #000;
 		max-height: 100px;
 		overflow-y: auto;
@@ -194,6 +211,11 @@ header {
 		& .search-result {
 			box-sizing: border-box;
 			padding: 5px 4px;
+			text-overflow: ellipsis;
+			overflow: hidden;
+			word-wrap: break-word;
+			white-space: nowrap;
+
 			cursor: pointer;
 
 			&:hover {
@@ -204,7 +226,6 @@ header {
 }
 
 @media screen and (max-width: 768px) {
-
 	#search {
 		justify-content: flex-end;
 	}
@@ -218,12 +239,12 @@ header {
 			display: none;
 		}
 	}
-	#search input[type="search"] {
+	#search input[type='search'] {
 		display: none;
 	}
 
 	body:has(#show-search:checked) {
-		& #search input[type="search"] {
+		& #search input[type='search'] {
 			display: block;
 			width: calc(100% - 30px);
 		}
@@ -242,7 +263,7 @@ header {
 		}
 	}
 
-	body:has(#show-search:checked) #search input[type="search"] {
+	body:has(#show-search:checked) #search input[type='search'] {
 		display: block;
 	}
 }
@@ -265,8 +286,6 @@ header {
 	height: 24px;
 	justify-self: flex-end;
 }
-
-
 
 /* #endregion */
 
@@ -294,6 +313,15 @@ header {
 	text-shadow: 1px 1px #000;
 	font-size: 1.3em;
 	white-space: pre;
+	text-align: center;
+
+	& .tooltip-ko {
+		line-height: 0.7;
+	}
+
+	& .tooltip-en {
+		font-size: 0.7em;
+	}
 }
 
 #maps-container {
@@ -305,7 +333,7 @@ header {
 	height: 100%;
 
 	&[data-displayed-maps='3'] .map {
-		width: 33%;
+		width: calc(100% / 3);
 		height: 100%;
 	}
 

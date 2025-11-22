@@ -110,14 +110,15 @@ export async function initMap(map: L.Map, level: MapLevel, features: Feature, fe
 		},
 		onEachFeature: (feature, layer) => {
 			const name = feature.properties.name;
-			featuresStore[name] = layer;
+			const englishName = feature.properties.name_eng;
+			featuresStore[`${name} (${englishName})`] = layer;
 			const suffix = name.slice(-1);
 			layer.on({
 				mouseover: (e) => {
 					highlightFeature(e.target);
 					tooltip.style.display = 'block';
 					tooltip.style.color = DIVISIONS_COLORS[level][suffix];
-					tooltip.textContent = name;
+					tooltip.innerHTML = `<div class='tooltip-ko'>${name}</div><div class='tooltip-en'>${englishName}</div>`;
 				},
 				mouseout: (e) => {
 					blurFeature(e.target);
@@ -139,7 +140,7 @@ export async function initMap(map: L.Map, level: MapLevel, features: Feature, fe
  */
 export function findFeaturesByName(features: FeatureMap, query: string): FeatureMap {
 	const foundNames = Object.keys(features)
-		.filter((name) => name.includes(query))
+		.filter((name) => name.toLowerCase().includes(query))
 		.slice(0, 20);
 
 	const foundFeatures: FeatureMap = {};
