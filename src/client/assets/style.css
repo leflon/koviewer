@@ -348,6 +348,24 @@ header {
 	}
 }
 
+@media screen and (max-aspect-ratio: 1/1) {
+	#maps-container[data-displayed-maps='3'] {
+		flex-direction: column;
+		& .map {
+			width: 100%;
+			height: calc(100% / 3);
+		}
+	}
+
+	#maps-container[data-displayed-maps='2'] {
+		flex-direction: column;
+		& .map {
+			width: 100%;
+			height: 50%;
+		}
+	}
+}
+
 .map {
 	width: 50%;
 	height: 50%;
@@ -411,6 +429,8 @@ header {
 	background: #000a;
 }
 
+/* #region Modal */
+
 #info-container {
 	position: fixed;
 	top: 0;
@@ -461,3 +481,4 @@ label {
 	cursor: pointer;
 	z-index: 100000;
 }
+/* #endregion */
