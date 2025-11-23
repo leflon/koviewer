@@ -94,7 +94,7 @@ export function createMap(htmlId: string): L.Map {
  * @param featuresStore The record that will receive all the features from this map
  */
 export async function initMap(map: L.Map, level: MapLevel, features: Feature, featuresStore: Record<string, L.Layer>) {
-	const tooltip = $(`#tooltips-container .tooltip[data-bind="${level}"]`);
+	const tooltip = $(`.tooltip[data-bind="${level}"]`);
 	$(`#map-${level}`).dataset.loading = 'false';
 	const baseLayer = L.tileLayer(TILE_LAYER_URI);
 	baseLayer.addTo(map);

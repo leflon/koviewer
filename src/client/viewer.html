@@ -63,17 +63,23 @@
 			</button>
 		</header>
 		<div id="main-viewer">
-			<div id="tooltips-container">
-				<div class="tooltip" data-bind="sido"></div>
-				<div class="tooltip" data-bind="sgg"></div>
-				<div class="tooltip" data-bind="emdong"></div>
-				<div class="tooltip" data-bind="li"></div>
-			</div>
 			<div id="maps-container">
-				<div class="map" id="map-sido" data-loading="true" data-name="시도"></div>
-				<div class="map" id="map-sgg" data-loading="true" data-name="시군구"></div>
-				<div class="map" id="map-emdong" data-loading="true" data-name="읍면동"></div>
-				<div class="map" id="map-li" data-loading="true" data-name="리"></div>
+				<div class="map-wrapper">
+					<div class="tooltip" data-bind="sido"></div>
+					<div class="map visible" id="map-sido" data-loading="true" data-name="시도"></div>
+				</div>
+				<div class="map-wrapper">
+					<div class="tooltip" data-bind="sgg"></div>
+					<div class="map visible" id="map-sgg" data-loading="true" data-name="시군구"></div>
+				</div>
+				<div class="map-wrapper">
+					<div class="tooltip" data-bind="emdong"></div>
+					<div class="map visible" id="map-emdong" data-loading="true" data-name="읍면동"></div>
+				</div>
+				<div class="map-wrapper">
+					<div class="tooltip" data-bind="li"></div>
+					<div class="map visible" id="map-li" data-loading="true" data-name="리"></div>
+				</div>
 			</div>
 		</div>
 		<div id="info-container">

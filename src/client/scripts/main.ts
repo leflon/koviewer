@@ -57,29 +57,17 @@ for (const map of Object.values(maps)) {
 //#endregion
 
 //#region Bind settings UI
-let displayedMapsCount = 0;
+let displayedMapsCount = 4;
 const container = $('#maps-container');
 for (const button of $$('#controls .show-toggle')) {
 	const level = (button as HTMLButtonElement).dataset.level as MapLevel;
 	const mapElement = $(`#map-${level}`);
 
-	// Initialize - buttons start with 'active' class
-	if (button.classList.contains('active')) {
-		displayedMapsCount++;
-		mapElement.classList.add('visible');
-	}
-
 	button.addEventListener('click', () => {
 		const isActive = button.classList.toggle('active');
 		displayedMapsCount += isActive ? 1 : -1;
 		container.dataset.displayedMaps = displayedMapsCount.toString();
-
-		// Toggle map visibility
-		if (isActive) {
-			mapElement.classList.add('visible');
-		} else {
-			mapElement.classList.remove('visible');
-		}
+		mapElement.classList.toggle('visible');
 
 		// Timeout lets the map be hidden before we invalidate the sizes,
 		// which reduces lag
@@ -188,7 +176,7 @@ $$('#maps-container .map').forEach((map) => {
 			right: mapRect.right,
 			bottom: mapRect.bottom
 		};
-		const tooltip = $(`#tooltips-container .tooltip[data-bind="${level}"]`);
+		const tooltip = $(`.map-wrapper .tooltip[data-bind="${level}"]`);
 		const toolTipRect = tooltip.getBoundingClientRect();
 		// Position the tooltip's center relative to the cursor, 30px below it
 		let x = e.clientX - toolTipRect.width / 2;

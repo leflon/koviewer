@@ -33,13 +33,15 @@ header {
 	border-radius: 8px;
 	color: white;
 	padding: 0 10px;
-
+	gap: 5px;
 	display: flex;
 	align-items: center;
-	gap: 20px;
 }
 
 #app-title {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 	width: max-content;
 	text-align: center;
 	flex-shrink: 0;
@@ -47,6 +49,7 @@ header {
 	& h1 {
 		margin: 0;
 		font-size: 1.6em;
+		line-height: 1;
 		font-weight: 800;
 	}
 
@@ -64,6 +67,7 @@ header {
 	align-items: center;
 	overflow-y: auto;
 	gap: 10px;
+	padding: 0 10px;
 	margin-left: auto;
 	scrollbar-width: none;
 }
@@ -81,6 +85,7 @@ header {
 	margin: 0 5px;
 	color: var(--highlight-color);
 	font-weight: 500;
+	font-size: 1em;
 	border: none;
 	transition:
 		all 0.3s ease,
@@ -288,21 +293,11 @@ header {
 	height: 100vh;
 }
 
-#tooltips-container {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	pointer-events: none;
-	z-index: 1000;
-}
-
 .tooltip {
 	position: fixed;
 	pointer-events: none;
 	display: none;
-	z-index: 100;
+	z-index: 10000;
 	text-shadow: 1px 1px #000;
 	font-size: 1.3em;
 	white-space: pre;
@@ -325,17 +320,17 @@ header {
 	width: 100%;
 	height: 100%;
 
-	&[data-displayed-maps='3'] .map {
+	&[data-displayed-maps='3'] .map-wrapper {
 		width: calc(100% / 3);
 		height: 100%;
 	}
 
-	&[data-displayed-maps='2'] .map {
+	&[data-displayed-maps='2'] .map-wrapper {
 		width: 50%;
 		height: 100%;
 	}
 
-	&[data-displayed-maps='1'] .map {
+	&[data-displayed-maps='1'] .map-wrapper {
 		width: 100%;
 		height: 100%;
 	}
@@ -344,7 +339,7 @@ header {
 @media screen and (max-aspect-ratio: 1/1) {
 	#maps-container[data-displayed-maps='3'] {
 		flex-direction: column;
-		& .map {
+		& .map-wrapper {
 			width: 100%;
 			height: calc(100% / 3);
 		}
@@ -352,50 +347,30 @@ header {
 
 	#maps-container[data-displayed-maps='2'] {
 		flex-direction: column;
-		& .map {
+		& .map-wrapper {
 			width: 100%;
 			height: 50%;
 		}
 	}
 }
 
-.map {
+.map-wrapper {
 	width: 50%;
 	height: 50%;
+	position: relative;
+	box-sizing: border-box;
+	display: none;
+
+	&:has(.map.visible) {
+		display: block;
+	}
+}
+
+.map {
+	width: 100%;
+	height: 100%;
 	box-sizing: border-box;
 	border: 1px solid #aaa;
-
-	&#map-sido {
-		display: none;
-	}
-
-	&#map-sgg {
-		display: none;
-	}
-
-	&#map-emdong {
-		display: none;
-	}
-
-	&#map-li {
-		display: none;
-	}
-
-	&#map-sido.visible {
-		display: block;
-	}
-
-	&#map-sgg.visible {
-		display: block;
-	}
-
-	&#map-emdong.visible {
-		display: block;
-	}
-
-	&#map-li.visible {
-		display: block;
-	}
 }
 
 .map[data-loading='true']::before {
