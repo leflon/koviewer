@@ -303,6 +303,15 @@ header {
 	white-space: pre;
 	text-align: center;
 
+	&.mobile {
+		position: absolute;
+		/* 30px offset for the crosshair */
+		top: calc(50% + 30px);
+		left: 50%;
+		transform: translate(-50%, -50%);
+		display: block;
+	}
+
 	& .tooltip-ko {
 		line-height: 0.7;
 	}
@@ -310,6 +319,24 @@ header {
 	& .tooltip-en {
 		font-size: 0.7em;
 	}
+}
+
+.map-mobile-crosshair {
+	font-family: 'Material Symbols Outlined';
+	font-variation-settings:
+		'FILL' 0,
+		'wght' 100,
+		'GRAD' 0,
+		'opsz' 24;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 1.5em;
+	color: white;
+	mix-blend-mode: difference;
+	z-index: 10001;
+	pointer-events: none;
 }
 
 #maps-container {

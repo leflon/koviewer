@@ -78,9 +78,15 @@ export async function loadData(level: MapLevel) {
 export function createMap(htmlId: string): L.Map {
 	const map = L.map(htmlId, {
 		preferCanvas: true,
+		renderer: L.canvas({
+			padding: 0.5
+		}),
 		zoomControl: false
 	}).setView(DEFAULT_LATLNG, DEFAULT_ZOOM_LEVEL);
-
+	// We disable double click zoom to prevent zooming
+	// when we simulate double click events (see in initMap->onEachFeature)
+	// That would simply crash the app
+	map.doubleClickZoom.disable();
 	L.control.zoom({ position: 'bottomright' }).addTo(map);
 	L.control.scale({ imperial: false }).addTo(map);
 	return map;
@@ -99,6 +105,9 @@ export async function initMap(map: L.Map, level: MapLevel, features: Feature, fe
 	const baseLayer = L.tileLayer(TILE_LAYER_URI);
 	baseLayer.addTo(map);
 
+	// This ensures only one feature is highlighted at a time
+	let currentHighlight = null;
+
 	L.geoJSON(features, {
 		style: (feature) => {
 			const suffix = feature!.properties.name.slice(-1);
@@ -113,20 +122,40 @@ export async function initMap(map: L.Map, level: MapLevel, features: Feature, fe
 			const englishName = feature.properties.name_eng;
 			featuresStore[`${name} (${englishName})`] = layer;
 			const suffix = name.slice(-1);
+			const mouseoverHandler = (e) => {
+				console.log(e);
+				/* This is useful when using our 'dblclick' event simulating hack.
+					Since leaflet does not listen to mouse events at all in this context,
+					It can't trigger `mouseout`, which would blur the previous feature.
+					Hence, we have to make sure by ourselves that we don't leave a tray of
+					highlighted features.
+				 */
+				if (currentHighlight) blurFeature(currentHighlight);
+				currentHighlight = e.target;
+
+				highlightFeature(e.target);
+				tooltip.style.display = 'block';
+				tooltip.style.color = DIVISIONS_COLORS[level][suffix];
+				tooltip.innerHTML = `<div class='tooltip-ko'>${name}</div><div class='tooltip-en'>${englishName}</div>`;
+			};
 			layer.on({
-				mouseover: (e) => {
-					highlightFeature(e.target);
-					tooltip.style.display = 'block';
-					tooltip.style.color = DIVISIONS_COLORS[level][suffix];
-					tooltip.innerHTML = `<div class='tooltip-ko'>${name}</div><div class='tooltip-en'>${englishName}</div>`;
-				},
+				mouseover: mouseoverHandler,
 				mouseout: (e) => {
 					blurFeature(e.target);
 					tooltip.style.display = 'none';
 				},
 				click: (e) => {
 					jumpTo(e.target);
-				}
+				},
+				/**
+				 * On mobile, we want to simulate a mousemove event on the center of the Map
+				 * to update the tooltips. while the mouse moves. This works on all synced maps,
+				 * except the one that is being dragged. This is because Leaflet does not listen
+				 * to custom mousemove events during dragging to avoid conflicts. To workaround this
+				 * limitation, we can simply simulate a doubleclick event instead, which will trigger
+				 * the same actions, but Leaflet will handle it even while dragging.
+				 */
+				dblclick: mouseoverHandler
 			});
 		}
 	}).addTo(map);

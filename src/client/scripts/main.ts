@@ -14,6 +14,7 @@ import {
 	loadData
 } from './functions';
 import { MapLevel } from './types';
+import MobileDetect from 'mobile-detect';
 
 //#region Clear deprecated caches
 for (const name of DEPRECATED_CACHES) {
@@ -140,6 +141,19 @@ controls.addEventListener('wheel', (e) => {
 
 //#region Bind tooltips to mouse position
 
+const md = new MobileDetect(navigator.userAgent);
+const IS_MOBILE = md.mobile() !== null;
+
+// Position all tooltips below their crosshair when on mobile
+if (IS_MOBILE) {
+	const tooltips = $$('.map-wrapper .tooltip') as NodeListOf<HTMLDivElement>;
+	tooltips.forEach((tooltip) => {
+		tooltip.classList.add('mobile');
+	});
+} else {
+	$$('.map-mobile-crosshair').forEach((crosshair) => crosshair.remove());
+}
+
 // Track mouse down state to avoid conflicting with Leaflet drag interactions
 const mouseDown = {
 	sido: false,
@@ -157,6 +171,7 @@ $$('#maps-container .map').forEach((map) => {
 
 	// Ensures all tooltips are hidden when the mouse leaves a map, so we don't have stuck tooltips
 	map.addEventListener('mouseleave', () => {
+		if (IS_MOBILE) return;
 		mouseDown[level] = false;
 		// We have to dispatch the event to the actual Leaflet map canvas, so that the underlying
 		// features also receive the event and unhighlight themselves, causing the tooltips to hide
@@ -167,7 +182,12 @@ $$('#maps-container .map').forEach((map) => {
 	});
 
 	(<HTMLDivElement>map).addEventListener('mousemove', (e) => {
+		// This kind of mouse event has terrible UX on mobile so we replace it with another system below
+		if (IS_MOBILE) return;
 		const level = map.id.slice(4) as MapLevel;
+		const tooltip = $(`.map-wrapper .tooltip[data-bind="${level}"]`);
+		const toolTipRect = tooltip.getBoundingClientRect();
+
 		const mapRect = map.getBoundingClientRect();
 		// A tooltip should never go outside its map's boundaries
 		const LIMITS = {
@@ -176,8 +196,6 @@ $$('#maps-container .map').forEach((map) => {
 			right: mapRect.right,
 			bottom: mapRect.bottom
 		};
-		const tooltip = $(`.map-wrapper .tooltip[data-bind="${level}"]`);
-		const toolTipRect = tooltip.getBoundingClientRect();
 		// Position the tooltip's center relative to the cursor, 30px below it
 		let x = e.clientX - toolTipRect.width / 2;
 		let y = e.clientY - toolTipRect.height / 2 + 30;
@@ -199,12 +217,10 @@ $$('#maps-container .map').forEach((map) => {
 		const higherMapDOM = <HTMLDivElement>$(`#map-${higherLevel}`);
 		const higherMapRect = higherMapDOM.getBoundingClientRect();
 
-		// The tooltip is positioned relative to the whole viewport,
-		// so we need to project the mouse position onto the map
-		// We can't use layerX/layerY
 		const newClientX = higherMapRect.left + e.clientX - mapRect.left;
 		const newClientY = higherMapRect.top + e.clientY - mapRect.top;
 		const canvas = $(`#map-${higherLevel} .leaflet-map-pane canvas`) as HTMLCanvasElement;
+		if (!canvas) return;
 		const event = new MouseEvent('mousemove', {
 			clientX: newClientX,
 			clientY: newClientY,
@@ -213,6 +229,33 @@ $$('#maps-container .map').forEach((map) => {
 		canvas.dispatchEvent(event);
 	});
 });
+
+if (IS_MOBILE) {
+	// Without this, the map will re-highlight the starting point
+	// of the interaction for some reason. This acts as a guard against that.
+	let isMoving = false;
+
+	for (const map of Object.values(maps)) {
+		const handler = (e) => {
+			if (!isMoving) return;
+			const container = map._container;
+			const rect = container.getBoundingClientRect();
+			const center = [rect.left + rect.width / 2, rect.top + rect.height / 2];
+			const canvas = container.querySelector(`.leaflet-map-pane canvas`) as HTMLCanvasElement;
+			if (!canvas) return;
+			const event = new MouseEvent('dblclick', {
+				clientX: center[0],
+				clientY: center[1],
+				bubbles: true
+			});
+			canvas.dispatchEvent(event);
+		};
+		map.addEventListener('dragstart', () => (isMoving = true));
+		map.addEventListener('move', handler);
+		map.addEventListener('dragend', () => (isMoving = false));
+		map.addEventListener('moveend', handler);
+	}
+}
 //#endregion
 
 //#region Search functionality
