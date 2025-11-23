@@ -59,11 +59,27 @@ for (const map of Object.values(maps)) {
 //#region Bind settings UI
 let displayedMapsCount = 0;
 const container = $('#maps-container');
-for (const checkbox of $$('#controls input[type=checkbox]')) {
-	if ((checkbox as HTMLInputElement).checked) displayedMapsCount++;
-	checkbox.addEventListener('change', (e) => {
-		displayedMapsCount += (e.target as HTMLInputElement).checked ? 1 : -1;
+for (const button of $$('#controls .show-toggle')) {
+	const level = (button as HTMLButtonElement).dataset.level as MapLevel;
+	const mapElement = $(`#map-${level}`);
+
+	// Initialize - buttons start with 'active' class
+	if (button.classList.contains('active')) {
+		displayedMapsCount++;
+		mapElement.classList.add('visible');
+	}
+
+	button.addEventListener('click', () => {
+		const isActive = button.classList.toggle('active');
+		displayedMapsCount += isActive ? 1 : -1;
 		container.dataset.displayedMaps = displayedMapsCount.toString();
+
+		// Toggle map visibility
+		if (isActive) {
+			mapElement.classList.add('visible');
+		} else {
+			mapElement.classList.remove('visible');
+		}
 
 		// Timeout lets the map be hidden before we invalidate the sizes,
 		// which reduces lag
@@ -73,6 +89,53 @@ for (const checkbox of $$('#controls input[type=checkbox]')) {
 	});
 }
 container.dataset.displayedMaps = displayedMapsCount.toString();
+//#endregion
+
+//#region Bind responsive search toggle
+const searchToggle = $('#responsive-search-toggle') as HTMLButtonElement;
+if (searchToggle) {
+	searchToggle.addEventListener('click', () => {
+		document.body.classList.toggle('search-open');
+	});
+}
+//#endregion
+
+//#region Bind info modal
+const infoModalOpen = $('#info-modal-open') as HTMLButtonElement;
+const infoModalClose = $('#close-modal') as HTMLButtonElement;
+const infoContainer = $('#info-container');
+
+if (infoModalOpen) {
+	infoModalOpen.addEventListener('click', () => {
+		infoContainer.classList.add('visible');
+		// Moves the keyboard navigation position right next to the close button,
+		// so users can focus the close button just by hitting tab once.
+		infoModalClose.focus();
+		infoModalClose.blur();
+	});
+}
+
+if (infoModalClose) {
+	infoModalClose.addEventListener('click', () => {
+		infoContainer.classList.remove('visible');
+	});
+}
+
+// Close modal when clicking outside
+if (infoContainer) {
+	infoContainer.addEventListener('click', (e) => {
+		if (e.target === infoContainer) {
+			infoContainer.classList.remove('visible');
+		}
+	});
+}
+
+// Close modal when pressing escape
+document.addEventListener('keydown', (e) => {
+	if (e.key === 'Escape') {
+		infoContainer.classList.remove('visible');
+	}
+});
 //#endregion
 
 //#region Allow horizontal scrolling with mouse wheel on controls

@@ -1,29 +1,8 @@
-/* #region Body & variables */
+/* #region Body */
 body {
-	/* Visiblity variables default values (display property) */
-	--show-sido: none;
-	--show-sgg: none;
-	--show-emdong: none;
-	--show-li: none;
 	padding: 0;
 	margin: 0;
 	font-family: 'Noto Sans KR', 'Noto Sans', sans-serif;
-}
-
-body:has(#show-sido:checked) {
-	--show-sido: block;
-}
-
-body:has(#show-sgg:checked) {
-	--show-sgg: block;
-}
-
-body:has(#show-emdong:checked) {
-	--show-emdong: block;
-}
-
-body:has(#show-li:checked) {
-	--show-li: block;
 }
 
 /* #endregion*/
@@ -80,6 +59,7 @@ header {
 
 #controls {
 	width: fit-content;
+	height: 100%;
 	display: flex;
 	align-items: center;
 	overflow-y: auto;
@@ -101,24 +81,29 @@ header {
 	margin: 0 5px;
 	color: var(--highlight-color);
 	font-weight: 500;
-	opacity: 0.8;
-	transition: 0.3s ease;
+	border: none;
+	transition:
+		all 0.3s ease,
+		outline 0s;
+	outline-offset: 2px;
+	will-change: transform;
 
-	& input {
-		position: fixed;
-		top: -1000px;
-		left: -1000px;
-		opacity: 0;
+	&:focus {
+		outline: 4px solid var(--highlight-color);
 	}
 
-	&:has(input:checked) {
+	&.active {
 		background: var(--highlight-color);
 		color: white;
-		opacity: 1;
 	}
 
 	&:hover {
-		opacity: 1;
+		transform: scale(1.05);
+	}
+
+	&:active {
+		transform: scale(0.95);
+		outline: none;
 	}
 
 	&::before {
@@ -132,7 +117,7 @@ header {
 		margin-right: 4px;
 	}
 
-	&:has(input:checked)::before {
+	&.active::before {
 		content: 'visibility_off';
 	}
 
@@ -160,7 +145,7 @@ header {
 	gap: 2px;
 
 	& input {
-		border: 1px solid #bbb;
+		border: 2px solid #bbb;
 		border-radius: 4px;
 		padding: 0 8px;
 		margin: 0;
@@ -177,15 +162,12 @@ header {
 
 	& #responsive-search-toggle {
 		display: none;
-		& input {
-			position: fixed;
-			top: -1000px;
-			left: -1000px;
-			opacity: 0;
-		}
-
 		cursor: pointer;
 		height: 24px;
+		border: none;
+		background: transparent;
+		padding: 0;
+		color: white;
 	}
 
 	& #search-results {
@@ -243,7 +225,7 @@ header {
 		display: none;
 	}
 
-	body:has(#show-search:checked) {
+	body.search-open {
 		& #search input[type='search'] {
 			display: block;
 			width: calc(100% - 30px);
@@ -262,10 +244,6 @@ header {
 			}
 		}
 	}
-
-	body:has(#show-search:checked) #search input[type='search'] {
-		display: block;
-	}
 }
 
 @media screen and (max-width: 425px) {
@@ -283,8 +261,23 @@ header {
 }
 
 #info-modal-open {
-	height: 24px;
 	justify-self: flex-end;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 5px;
+	margin-right: -5px;
+	border-radius: 50%;
+	border: none;
+	background: transparent;
+	color: white;
+	cursor: pointer;
+	outline: none;
+
+	&:hover,
+	&:focus {
+		background: #fff4;
+	}
 }
 
 /* #endregion */
@@ -373,19 +366,35 @@ header {
 	border: 1px solid #aaa;
 
 	&#map-sido {
-		display: var(--show-sido);
+		display: none;
 	}
 
 	&#map-sgg {
-		display: var(--show-sgg);
+		display: none;
 	}
 
 	&#map-emdong {
-		display: var(--show-emdong);
+		display: none;
 	}
 
 	&#map-li {
-		display: var(--show-li);
+		display: none;
+	}
+
+	&#map-sido.visible {
+		display: block;
+	}
+
+	&#map-sgg.visible {
+		display: block;
+	}
+
+	&#map-emdong.visible {
+		display: block;
+	}
+
+	&#map-li.visible {
+		display: block;
 	}
 }
 
@@ -435,24 +444,18 @@ header {
 	position: fixed;
 	top: 0;
 	left: 0;
-	width: 100dvw;
-	height: 100dvh;
+	width: 100vw;
+	height: 100vh;
 	justify-content: center;
 	align-items: center;
 	background: #0004;
 	backdrop-filter: blur(10px);
 	z-index: 999999;
 	display: none;
-}
 
-#show-modal {
-	position: fixed;
-	top: -1000px;
-	left: -1000px;
-}
-
-body:has(#show-modal:checked) #info-container {
-	display: flex;
+	&.visible {
+		display: flex;
+	}
 }
 
 label {
@@ -478,7 +481,20 @@ label {
 	position: absolute;
 	top: 10px;
 	right: 10px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 	cursor: pointer;
 	z-index: 100000;
+	border: none;
+	background: transparent;
+	padding: 10px;
+	border-radius: 50%;
+	outline: none;
+
+	&:focus,
+	&:hover {
+		background: #fff4;
+	}
 }
 /* #endregion */

@@ -24,51 +24,43 @@
 				<h2>South Korea Administrative Divisions Viewer</h2>
 			</div>
 			<div id="controls">
-				<label for="show-sido" class="show-toggle">
-					<input type="checkbox" id="show-sido" data-level="sido" checked />
+				<button class="show-toggle active" data-level="sido">
 					<div class="toggle-label-text">
 						<span class="toggle-label-ko">시도</span>
 						<span class="toggle-label-en">Provinces</span>
 					</div>
-				</label>
-				<label for="show-sgg" class="show-toggle">
-					<input type="checkbox" id="show-sgg" data-level="sgg" checked />
+				</button>
+				<button class="show-toggle active" data-level="sgg">
 					<div class="toggle-label-text">
 						<span class="toggle-label-ko">시군구</span>
 						<span class="toggle-label-en">Cities</span>
 					</div>
-				</label>
-				<label for="show-emdong" class="show-toggle">
-					<input type="checkbox" id="show-emdong" data-level="emdong" checked />
+				</button>
+				<button class="show-toggle active" data-level="emdong">
 					<div class="toggle-label-text">
 						<span class="toggle-label-ko">읍면동</span>
 						<span class="toggle-label-en">Towns</span>
 					</div>
-				</label>
-				<label for="show-li" class="show-toggle">
-					<input type="checkbox" id="show-li" data-level="li" checked />
+				</button>
+				<button class="show-toggle active" data-level="li">
 					<div class="toggle-label-text">
 						<span class="toggle-label-ko">리</span>
 						<span class="toggle-label-en">Villages</span>
 					</div>
-				</label>
+				</button>
 			</div>
 			<div id="search">
 				<input type="search" id="search-input" placeholder="검색 Search" />
-				<label id="responsive-search-toggle" for="show-search">
-					<input type="checkbox" id="show-search" />
+				<button id="responsive-search-toggle">
 					<span class="material-symbols-outlined" id="search-open-icon"> search </span>
 					<span class="material-symbols-outlined" id="search-close-icon"> search_off </span>
-				</label>
+				</button>
 				<!-- Prevent focus on the container to allow direct focus on individual results -->
 				<div id="search-results" tabindex="-1"></div>
 			</div>
-			<div id="info-modal-open">
-				<input type="checkbox" id="show-modal" />
-				<label for="show-modal">
-					<span class="material-symbols-outlined"> info </span>
-				</label>
-			</div>
+			<button id="info-modal-open">
+				<span class="material-symbols-outlined"> info </span>
+			</button>
 		</header>
 		<div id="main-viewer">
 			<div id="tooltips-container">
@@ -85,10 +77,10 @@
 			</div>
 		</div>
 		<div id="info-container">
-			<label for="show-modal" id="close-modal">
+			<button id="close-modal" tabindex="0">
 				<span class="material-symbols-outlined">close</span>
-			</label>
-			<div id="info-modal">
+			</button>
+			<div id="info-modal" tabindex="-1">
 				<h1>South Korea administrative divisions</h1>
 				<h2>Upper-level local autonomy (시도)</h2>
 				<p>
