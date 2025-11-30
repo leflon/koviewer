@@ -24,12 +24,12 @@ export const DEPRECATED_CACHES = ['geojson-cache-v1', 'geojson-cache-v2', 'geojs
 /**
  * The default coordinates to center the maps at. (in this case, about the center of the south-korean peninsula)
  */
-export const DEFAULT_LATLNG: LatLngExpression = [36.05591712705268, 127.9057675953637];
+export const DEFAULT_LATLNG: LatLngExpression = [37.58, 127];
 
 /**
  * The default zoom level of the maps.
  */
-export const DEFAULT_ZOOM_LEVEL = 7;
+export const DEFAULT_ZOOM_LEVEL = 10;
 
 /**
  * The regular fillOpacity of all leaflet features
