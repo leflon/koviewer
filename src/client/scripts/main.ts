@@ -196,9 +196,9 @@ $$('#maps-container .map').forEach((map) => {
 			right: mapRect.right,
 			bottom: mapRect.bottom
 		};
-		// Position the tooltip's center relative to the cursor, 30px below it
+		// Position the tooltip's center relative to the cursor
 		let x = e.clientX - toolTipRect.width / 2;
-		let y = e.clientY - toolTipRect.height / 2 + 30;
+		let y = e.clientY - toolTipRect.height / 2 + 40; // Offset to prevent the cursor from overlapping the tooltip
 		// Apply tooltip boundary limits
 		if (x + toolTipRect.width >= LIMITS.right) x = LIMITS.right - toolTipRect.width;
 		if (x <= LIMITS.left) x = LIMITS.left;
