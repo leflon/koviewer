@@ -92,6 +92,33 @@ export function createMap(htmlId: string): L.Map {
 	return map;
 }
 
+export async function openWiki(level: MapLevel) {
+	const targetEn = $(`.tooltip[data-bind="${level}"] .tooltip-en`)?.innerText;
+	const targetKo = $(`.tooltip[data-bind="${level}"] .tooltip-ko`)?.innerText;
+	if (!targetEn || !targetKo) return;
+	const parentLevel = getHigherLevel(level);
+	// If target is sido, there is no parent so we skip parent check with an empty string
+	let parentEn = '';
+	let parentKo = '';
+	if (parentLevel) {
+		parentEn = $(`.tooltip[data-bind="${parentLevel}"] .tooltip-en`)?.innerText || '';
+		parentKo = $(`.tooltip[data-bind="${parentLevel}"] .tooltip-ko`)?.innerText || '';
+	}
+
+	const resultEn = await fetch(`/wiki?target=${encodeURIComponent(targetEn)}&parent=${encodeURIComponent(parentEn)}&lang=en`);
+	const resultKo = await fetch(`/wiki?target=${encodeURIComponent(targetKo)}&parent=${encodeURIComponent(parentKo)}&lang=ko`);
+
+	if (resultEn.ok && resultKo.ok) {
+		const dataEn = await resultEn.json();
+		const dataKo = await resultKo.json();
+
+		$(`#wiki-article-en`).innerHTML = `<h2>${dataEn.title}</h2>${dataEn.content}`;
+		$(`#wiki-article-ko`).innerHTML = `<h2>${dataKo.title}</h2>${dataKo.content}`;
+		$(`#wiki-section`).dataset.visible = 'true';
+	}
+
+}
+
 /**
  * Initializes a map, adding map tiles and geojson layers.
  * @param map The map to initialize
@@ -106,7 +133,7 @@ export async function initMap(map: L.Map, level: MapLevel, features: Feature, fe
 	baseLayer.addTo(map);
 
 	// This ensures only one feature is highlighted at a time
-	let currentHighlight = null;
+	let currentHighlight: L.FeatureGroup | null = null;
 
 	L.geoJSON(features, {
 		style: (feature) => {
@@ -122,7 +149,7 @@ export async function initMap(map: L.Map, level: MapLevel, features: Feature, fe
 			const englishName = feature.properties.name_eng;
 			featuresStore[`${name} (${englishName})`] = layer;
 			const suffix = name.slice(-1);
-			const mouseoverHandler = (e) => {
+			const mouseoverHandler = (e: L.LeafletMouseEvent) => {
 				console.log(e);
 				/* This is useful when using our 'dblclick' event simulating hack.
 					Since leaflet does not listen to mouse events at all in this context,
@@ -140,12 +167,13 @@ export async function initMap(map: L.Map, level: MapLevel, features: Feature, fe
 			};
 			layer.on({
 				mouseover: mouseoverHandler,
-				mouseout: (e) => {
+				mouseout: (e: L.LeafletMouseEvent) => {
 					blurFeature(e.target);
 					tooltip.style.display = 'none';
 				},
-				click: (e) => {
+				click: (e: L.LeafletMouseEvent) => {
 					jumpTo(e.target);
+					openWiki(level);
 				},
 				/**
 				 * On mobile, we want to simulate a mousemove event on the center of the Map

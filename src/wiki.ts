@@ -36,6 +36,12 @@ export async function searchWiki(query: string, lang: 'en' | 'ko') {
 	return relevantResult?.title;
 }
 
+export async function formatWikiLink(title: string, lang: 'en' | 'ko') {
+	const base = lang === 'en' ? WIKI_EN_ADDR : WIKI_KO_ADDR;
+	const url = new URL(`/wiki/${encodeURIComponent(title)}`, base);
+	return url.toString();
+}
+
 export async function getWikiHtml(title: string, lang: 'en' | 'ko') {
 	const base = lang === 'en' ? WIKI_EN_ADDR : WIKI_KO_ADDR;
 	const url = new URL(WIKI_HTML_URL.replace('{pageName}', encodeURIComponent(title)), base);
@@ -66,4 +72,25 @@ export function findRelevantFromList(html: string, target: string, parent: strin
 	}
 	console.log(targetLink);
 	return targetLink;
+}
+
+export function formatHtml(html: string) {
+	return html;
+}
+
+export default async function fetchWikiPage(target: string, parent: string, lang: 'en' | 'ko') {
+	let title = await searchWiki(target, lang);
+	if (!title) return null;
+	
+	let html = await getWikiHtml(title, lang);
+	if (isListWiki(html, lang)) {
+		title = findRelevantFromList(html, target.toLowerCase(), parent.toLowerCase());
+		if (!title) return null;
+		html = await getWikiHtml(title, lang);
+	}
+
+	return {
+		link: formatWikiLink(title, lang),
+		html: formatHtml(html)
+	};
 }
