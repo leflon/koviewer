@@ -29,12 +29,14 @@ const server = Bun.serve({
 			const target = url.searchParams.get('target');
 			const parent = url.searchParams.get('parent');
 			const lang = url.searchParams.get('lang') as 'en' | 'ko' || 'en';
+			
+			console.log(target, parent, lang);
 
-			if (!target || !parent) {
+			if (!target) {
 				return new Response('Missing parameters', { status: 400 });
 			}
 
-			const result = await fetchWikiPage(target, parent, lang);
+			const result = await fetchWikiPage(target, parent || '', lang);
 			return Response.json(result);
 
 		}

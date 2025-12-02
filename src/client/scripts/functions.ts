@@ -93,30 +93,25 @@ export function createMap(htmlId: string): L.Map {
 }
 
 export async function openWiki(level: MapLevel) {
-	const targetEn = $(`.tooltip[data-bind="${level}"] .tooltip-en`)?.innerText;
-	const targetKo = $(`.tooltip[data-bind="${level}"] .tooltip-ko`)?.innerText;
-	if (!targetEn || !targetKo) return;
 	const parentLevel = getHigherLevel(level);
-	// If target is sido, there is no parent so we skip parent check with an empty string
-	let parentEn = '';
-	let parentKo = '';
-	if (parentLevel) {
-		parentEn = $(`.tooltip[data-bind="${parentLevel}"] .tooltip-en`)?.innerText || '';
-		parentKo = $(`.tooltip[data-bind="${parentLevel}"] .tooltip-ko`)?.innerText || '';
+	const languages = ['en', 'ko'];
+	const targets = languages.map((lang) =>
+		$(`.tooltip[data-bind="${level}"] .tooltip-${lang}`)?.innerText
+	);
+
+	for (const lang of languages) {
+		const target = targets[languages.indexOf(lang)];
+		if (!target) return;
+		let parent = '';
+		if (parentLevel) {
+			parent = $(`.tooltip[data-bind="${parentLevel}"] .tooltip-${lang}`)?.innerText || '';
+		}
+		const result = await fetch(`/wiki?target=${encodeURIComponent(target)}&parent=${encodeURIComponent(parent)}&lang=${lang}`);
+		if (result.ok) {
+			const data = await result.json();
+			$(`.wiki-content[data-lang="${lang}"]`).innerHTML = data ? `<h2>${data.title}</h2>${data.html}` : '<p>No relevant Wikipedia page found.</p>';
+		}
 	}
-
-	const resultEn = await fetch(`/wiki?target=${encodeURIComponent(targetEn)}&parent=${encodeURIComponent(parentEn)}&lang=en`);
-	const resultKo = await fetch(`/wiki?target=${encodeURIComponent(targetKo)}&parent=${encodeURIComponent(parentKo)}&lang=ko`);
-
-	if (resultEn.ok && resultKo.ok) {
-		const dataEn = await resultEn.json();
-		const dataKo = await resultKo.json();
-
-		$(`#wiki-article-en`).innerHTML = `<h2>${dataEn.title}</h2>${dataEn.content}`;
-		$(`#wiki-article-ko`).innerHTML = `<h2>${dataKo.title}</h2>${dataKo.content}`;
-		$(`#wiki-section`).dataset.visible = 'true';
-	}
-
 }
 
 /**

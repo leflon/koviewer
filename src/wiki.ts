@@ -1,3 +1,4 @@
+import { hash } from 'bun';
 import * as cheerio from 'cheerio';
 
 const WIKI_EN_ADDR = 'https://en.wikipedia.org/';
@@ -14,7 +15,7 @@ const KEYWORDS = {
 // If the first paragraph contains these keywords, the result is likely a listing of wikis and not a specific wiki
 const IS_LISTING_HINTS = {
 	en: ['several'],
-	ko: ['다른 뜻']
+	ko: ['다른 뜻', '다음 지역']
 };
 
 export async function searchWiki(query: string, lang: 'en' | 'ko') {
@@ -24,10 +25,13 @@ export async function searchWiki(query: string, lang: 'en' | 'ko') {
 	const res = await fetch(url);
 	const results = (await res.json()).pages as Record<string, any>[];
 
+	const baseName = query.split('-')[0].toLowerCase();
+
 	let relevantResult;
 	for (const result of results) {
 		const includesKeyword = KEYWORDS[lang].some((keyword) => result.excerpt.toLowerCase().includes(keyword));
-		if (includesKeyword) {
+		const includesBaseName = result.title.toLowerCase().includes(baseName);
+		if (includesKeyword && includesBaseName) {
 			relevantResult = result;
 			break;
 		}
@@ -52,7 +56,7 @@ export async function getWikiHtml(title: string, lang: 'en' | 'ko') {
 
 export function isListWiki(html: string, lang: 'en' | 'ko') {
 	const $ = cheerio.load(html);
-	const firstParagraph = $('section').first().text().toLowerCase();
+	const firstParagraph = $('p').first().text().toLowerCase();
 	return IS_LISTING_HINTS[lang].some((hint) => firstParagraph.includes(hint));
 }
 
@@ -61,35 +65,64 @@ export function findRelevantFromList(html: string, target: string, parent: strin
 
 	let $li = $('li:has(a)');
 	let targetLink;
-	while ($li && $li.html()) {
-		const html = $li.html();
+	$li.each((_, elm) => {
+		console.log($(elm).text());
+		const html = $(elm).html();
 		const lowerHtml = html?.toLowerCase();
 		if (lowerHtml?.includes(target) && lowerHtml.includes(parent)) {
-			targetLink = $li.find(`a:icontains(${target})`).attr('href');
-			break;
+			const directTargetLink = $(elm).find(`a:icontains(${target})`).attr('href');
+			if (directTargetLink && !directTargetLink.includes('edit')) {
+				targetLink = directTargetLink;
+				return false;
+			}
+					
+			targetLink = $(elm).find(`a:icontains(${parent})`).attr('href');
+			return false;
 		}
-		$li = $li.next();
-	}
-	console.log(targetLink);
-	return targetLink;
+	});
+	targetLink ??= '';
+	const split = targetLink.split('/');
+	const title = split[split.length - 1];
+	return title;
 }
 
 export function formatHtml(html: string) {
-	return html;
+	const $ = cheerio.load(html);
+	// Remove conflicting tags
+	const base = $('base').attr('href') || '';
+	$('meta, base, title').remove();
+	// Fix stylesheet relative liks
+	$('link[rel="stylesheet"]').each((_, elm) => {
+		const href = $(elm).attr('href') || '';
+		console.log(href);
+		if (href.startsWith('/')) {
+			const url = new URL(href, 'https://' + base);
+			$(elm).attr('href', url.toString());
+		}
+	});
+
+	// Remove external links section
+	$('section:has(h2:icontains("external links")), section:has(h2:icontains("외부 링크"))').remove();
+	return $.html();
 }
 
 export default async function fetchWikiPage(target: string, parent: string, lang: 'en' | 'ko') {
 	let title = await searchWiki(target, lang);
 	if (!title) return null;
+	console.log(`Found wiki title: ${title}`);
 	
 	let html = await getWikiHtml(title, lang);
+
 	if (isListWiki(html, lang)) {
+		console.log('The wiki page is a listing. Searching for relevant entry...');
 		title = findRelevantFromList(html, target.toLowerCase(), parent.toLowerCase());
 		if (!title) return null;
+		console.log(`Found relevant wiki title from listing: ${title}`);
 		html = await getWikiHtml(title, lang);
 	}
 
 	return {
+		title,
 		link: formatWikiLink(title, lang),
 		html: formatHtml(html)
 	};
