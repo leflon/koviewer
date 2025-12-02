@@ -126,6 +126,11 @@ document.addEventListener('keydown', (e) => {
 	}
 });
 //#endregion
+//#region Wiki display
+const wikiContainer = $('#wiki-container');
+$('#toggle-wiki').addEventListener('click', () => {
+	wikiContainer.classList.toggle('hidden');
+});
 
 //#region Allow horizontal scrolling with mouse wheel on controls
 const controls = $('#controls');

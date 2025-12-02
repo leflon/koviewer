@@ -86,12 +86,15 @@
 				</div>
 			</div>
 		</div>
-		<div id="wiki-container">
+		<div id="wiki-container" class="hidden">
+			<button id="toggle-wiki">
+				<span class="material-symbols-outlined"> keyboard_arrow_down </span>
+			</button>
 			<div id="wiki-title-bar">
-			<div id="lang-selector">
-				<button class="lang-toggle" data-lang="en">English</button>
-				<button class="lang-toggle" data-lang="ko">한국어</button>
-			</div>
+				<div id="lang-selector">
+					<button class="lang-toggle selected" data-lang="en">English</button>
+					<button class="lang-toggle" data-lang="ko">한국어</button>
+				</div>
 			</div>
 			<div class="wiki-content" data-lang="en"></div>
 			<div class="wiki-content" data-lang="ko"></div>
