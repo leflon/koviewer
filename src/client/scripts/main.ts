@@ -15,6 +15,7 @@ import {
 } from './functions';
 import { MapLevel } from './types';
 import MobileDetect from 'mobile-detect';
+import { LeafletEventHandlerFn } from 'leaflet';
 
 //#region Clear deprecated caches
 for (const name of DEPRECATED_CACHES) {
@@ -236,7 +237,7 @@ if (IS_MOBILE) {
 	let isMoving = false;
 
 	for (const map of Object.values(maps)) {
-		const handler = (e) => {
+		const handler: LeafletEventHandlerFn = (e) => {
 			if (!isMoving) return;
 			const container = map._container;
 			const rect = container.getBoundingClientRect();
@@ -284,6 +285,14 @@ input.addEventListener('input', (e) => {
 	}
 
 	const results = findFeaturesByName(ALL_FEATURES, query);
+	/* Filter out hidden maps' features from the results */
+	for (const [name, feature] of Object.entries(results)) {
+		const mapElm = (feature as any)._map._container;
+		const isHidden = !mapElm.classList.contains('visible');
+		if (isHidden) {
+			delete results[name];
+		}
+	}
 	clearResults();
 	for (const [name, feature] of Object.entries(results)) {
 		const elm = document.createElement('div');

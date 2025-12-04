@@ -1,5 +1,5 @@
 import { Feature } from 'geojson';
-import L from 'leaflet';
+import L, { LeafletEventHandlerFn } from 'leaflet';
 import { feature } from 'topojson-client';
 import {
 	CACHE_NAME,
@@ -106,7 +106,7 @@ export async function initMap(map: L.Map, level: MapLevel, features: Feature, fe
 	baseLayer.addTo(map);
 
 	// This ensures only one feature is highlighted at a time
-	let currentHighlight = null;
+	let currentHighlight: L.FeatureGroup | null = null;
 
 	L.geoJSON(features, {
 		style: (feature) => {
@@ -122,8 +122,7 @@ export async function initMap(map: L.Map, level: MapLevel, features: Feature, fe
 			const englishName = feature.properties.name_eng;
 			featuresStore[`${name} (${englishName})`] = layer;
 			const suffix = name.slice(-1);
-			const mouseoverHandler = (e) => {
-				console.log(e);
+			const mouseoverHandler: LeafletEventHandlerFn = (e) => {
 				/* This is useful when using our 'dblclick' event simulating hack.
 					Since leaflet does not listen to mouse events at all in this context,
 					It can't trigger `mouseout`, which would blur the previous feature.
