@@ -81,11 +81,12 @@ export function createMap(htmlId: string): L.Map {
 		renderer: L.canvas({
 			padding: 0.5
 		}),
-		zoomControl: false
+		zoomControl: false,
 	}).setView(DEFAULT_LATLNG, DEFAULT_ZOOM_LEVEL);
 	// We disable double click zoom to prevent zooming
 	// when we simulate double click events (see in initMap->onEachFeature)
 	// That would simply crash the app
+	map.attributionControl.addAttribution('<a href="https://carto.com/attributions" target="_blank">Carto</a> | <a href="http://www.gisdeveloper.co.kr/?p=2332" target="_blank">gisdeveloper.co.kr</a>');
 	map.doubleClickZoom.disable();
 	L.control.zoom({ position: 'bottomright' }).addTo(map);
 	L.control.scale({ imperial: false }).addTo(map);
