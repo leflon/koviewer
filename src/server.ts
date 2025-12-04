@@ -11,6 +11,13 @@ const server = Bun.serve({
 	port: process.env.PORT || process.env.BUN_PORT || 3000,
 	routes: {
 		'/': viewer,
+		'/public/:file': (req) => {
+			const { file } = req.params;
+			if (file.includes('..')) {
+				return new Response('Not found', { status: 404 });
+			}
+			return new Response(Bun.file(`../public/${file}`));
+		},
 		'/geo/:id': async (req) => {
 			const { id } = req.params;
 
