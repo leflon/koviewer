@@ -1,5 +1,4 @@
-import { Feature } from 'geojson';
-import L, { LeafletEventHandlerFn } from 'leaflet';
+import { Feature, GeoJsonProperties, Geometry } from 'geojson';
 import { feature } from 'topojson-client';
 import {
 	CACHE_NAME,
@@ -13,6 +12,7 @@ import {
 	TOPOLOGY_OBJECTS_KEY
 } from './constants';
 import { LayerMap as FeatureMap, MapLevel } from './types';
+import { Map } from 'maplibre-gl';
 
 /** Shortcut for `document.querySelector` */
 export const $ = (selector: string) => document.querySelector(selector) as HTMLElement;
@@ -45,6 +45,7 @@ export function getHigherLevel(level: MapLevel): MapLevel | null {
  */
 export async function topoToGeo(level: MapLevel, topo: TopoJSON.Topology) {
 	const geojson = feature(topo, TOPOLOGY_OBJECTS_KEY[level]);
+  console.log(geojson);
 	return geojson;
 }
 
@@ -54,6 +55,10 @@ export async function topoToGeo(level: MapLevel, topo: TopoJSON.Topology) {
  * @returns The corresponding GeoJSON data.
  */
 export async function loadData(level: MapLevel) {
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('Bypassing cache for development.');
+    return topoToGeo(level, await (await fetch(`/geo/${level}`)).json());
+  }
 	const url = `/geo/${level}`;
 	const cache = await caches.open(CACHE_NAME);
 
@@ -75,21 +80,27 @@ export async function loadData(level: MapLevel) {
  * @param htmlId The id of the HTML element rendering the map.
  * @returns The created map object
  */
-export function createMap(htmlId: string): L.Map {
-	const map = L.map(htmlId, {
-		preferCanvas: true,
-		renderer: L.canvas({
-			padding: 0.5
-		}),
-		zoomControl: false,
-	}).setView(DEFAULT_LATLNG, DEFAULT_ZOOM_LEVEL);
-	// We disable double click zoom to prevent zooming
-	// when we simulate double click events (see in initMap->onEachFeature)
-	// That would simply crash the app
-	map.attributionControl.addAttribution('<a href="https://carto.com/attributions" target="_blank">Carto</a> | <a href="http://www.gisdeveloper.co.kr/?p=2332" target="_blank">gisdeveloper.co.kr</a>');
-	map.doubleClickZoom.disable();
-	L.control.zoom({ position: 'bottomright' }).addTo(map);
-	L.control.scale({ imperial: false }).addTo(map);
+export function createMap(htmlId: string): Map {
+	const map = new Map({
+		container: htmlId,
+		style: 'https://tiles.openfreemap.org/styles/positron',
+		center: DEFAULT_LATLNG,
+		zoom: DEFAULT_ZOOM_LEVEL
+	});
+	// const map = L.map(htmlId, {
+	// 	preferCanvas: true,
+	// 	renderer: L.canvas({
+	// 		padding: 0.5
+	// 	}),
+	// 	zoomControl: false,
+	// }).setView(DEFAULT_LATLNG, DEFAULT_ZOOM_LEVEL);
+	// // We disable double click zoom to prevent zooming
+	// // when we simulate double click events (see in initMap->onEachFeature)
+	// // That would simply crash the app
+	// map.attributionControl.addAttribution('<a href="https://carto.com/attributions" target="_blank">Carto</a> | <a href="http://www.gisdeveloper.co.kr/?p=2332" target="_blank">gisdeveloper.co.kr</a>');
+	// map.doubleClickZoom.disable();
+	// L.control.zoom({ position: 'bottomright' }).addTo(map);
+	// L.control.scale({ imperial: false }).addTo(map);
 	return map;
 }
 
@@ -100,65 +111,86 @@ export function createMap(htmlId: string): L.Map {
  * @param features The features to render onto the map
  * @param featuresStore The record that will receive all the features from this map
  */
-export async function initMap(map: L.Map, level: MapLevel, features: Feature, featuresStore: Record<string, L.Layer>) {
+export async function initMap(map: Map, level: MapLevel, features: Feature, featuresStore: Record<string, L.Layer>) {
 	const tooltip = $(`.tooltip[data-bind="${level}"]`);
 	$(`#map-${level}`).dataset.loading = 'false';
-	const baseLayer = L.tileLayer(TILE_LAYER_URI);
-	baseLayer.addTo(map);
+
+	map.addSource('gis', {
+		type: 'geojson',
+		data: features
+	});
+	map.addLayer({
+		id: 'gis-fill',
+		source: 'gis',
+		type: 'fill',
+		paint: {
+			'fill-color': ['get', 'color'],
+			'fill-opacity': 0.8,
+		}
+	});
+	map.addLayer({
+		id: 'gis-outline',
+		source: 'gis',
+		type: 'line',
+		paint: {
+			'line-color': 'white',
+			'line-width': STROKE_WEIGHT
+		}
+	});
 
 	// This ensures only one feature is highlighted at a time
 	let currentHighlight: L.FeatureGroup | null = null;
 
-	L.geoJSON(features, {
-		style: (feature) => {
-			const suffix = feature!.properties.name.slice(-1);
-			return {
-				color: DIVISIONS_COLORS[level][suffix],
-				fillOpacity: REGULAR_FILL_OPACITY,
-				weight: STROKE_WEIGHT
-			};
-		},
-		onEachFeature: (feature, layer) => {
-			const name = feature.properties.name;
-			const englishName = feature.properties.name_eng;
-			featuresStore[`${name} (${englishName})`] = layer;
-			const suffix = name.slice(-1);
-			const mouseoverHandler: LeafletEventHandlerFn = (e) => {
-				/* This is useful when using our 'dblclick' event simulating hack.
-					Since leaflet does not listen to mouse events at all in this context,
-					It can't trigger `mouseout`, which would blur the previous feature.
-					Hence, we have to make sure by ourselves that we don't leave a tray of
-					highlighted features.
-				 */
-				if (currentHighlight) blurFeature(currentHighlight);
-				currentHighlight = e.target;
+	// L.geoJSON(features, {
+	// 	style: (feature) => {
+	// 		const suffix = feature!.properties.name.slice(-1);
+	// 		return {
+	// 			color: DIVISIONS_COLORS[level][suffix],
+	// 			fillOpacity: REGULAR_FILL_OPACITY,
+	// 			weight: STROKE_WEIGHT
+	// 		};
+	// 	},
+	// 	onEachFeature: (feature, layer) => {
+	// 		const name = feature.properties.name;
+	// 		const englishName = feature.properties.name_eng;
+	// 		featuresStore[`${name} (${englishName})`] = layer;
+	// 		const suffix = name.slice(-1);
+	// 		const mouseoverHandler: LeafletEventHandlerFn = (e) => {
+	// 			/* This is useful when using our 'dblclick' event simulating hack.
+	// 				Since leaflet does not listen to mouse events at all in this context,
+	// 				It can't trigger `mouseout`, which would blur the previous feature.
+	// 				Hence, we have to make sure by ourselves that we don't leave a tray of
+	// 				highlighted features.
+	// 			 */
+	// 			if (currentHighlight) blurFeature(currentHighlight);
+	// 			currentHighlight = e.target;
 
-				highlightFeature(e.target);
-				tooltip.style.display = 'block';
-				tooltip.style.color = DIVISIONS_COLORS[level][suffix];
-				tooltip.innerHTML = `<div class='tooltip-ko'>${name}</div><div class='tooltip-en'>${englishName}</div>`;
-			};
-			layer.on({
-				mouseover: mouseoverHandler,
-				mouseout: (e) => {
-					blurFeature(e.target);
-					tooltip.style.display = 'none';
-				},
-				click: (e) => {
-					jumpTo(e.target);
-				},
-				/**
-				 * On mobile, we want to simulate a mousemove event on the center of the Map
-				 * to update the tooltips. while the mouse moves. This works on all synced maps,
-				 * except the one that is being dragged. This is because Leaflet does not listen
-				 * to custom mousemove events during dragging to avoid conflicts. To workaround this
-				 * limitation, we can simply simulate a doubleclick event instead, which will trigger
-				 * the same actions, but Leaflet will handle it even while dragging.
-				 */
-				dblclick: mouseoverHandler
-			});
-		}
-	}).addTo(map);
+	// 			highlightFeature(e.target);
+	// 			tooltip.style.display = 'block';
+	// 			tooltip.style.color = DIVISIONS_COLORS[level][suffix];
+	// 			tooltip.innerHTML = `<div class='tooltip-ko'>${name}</div><div class='tooltip-en'>${englishName}</div>`;
+	// 		};
+	// 		layer.on({
+	// 			mouseover: mouseoverHandler,
+	// 			mouseout: (e) => {
+	// 				blurFeature(e.target);
+	// 				tooltip.style.display = 'none';
+	// 			},
+	// 			click: (e) => {
+	// 				jumpTo(e.target);
+	// 			},
+	// 			/**
+	// 			 * On mobile, we want to simulate a mousemove event on the center of the Map
+	// 			 * to update the tooltips. while the mouse moves. This works on all synced maps,
+	// 			 * except the one that is being dragged. This is because Leaflet does not listen
+	// 			 * to custom mousemove events during dragging to avoid conflicts. To workaround this
+	// 			 * limitation, we can simply simulate a doubleclick event instead, which will trigger
+	// 			 * the same actions, but Leaflet will handle it even while dragging.
+	// 			 */
+	// 			dblclick: mouseoverHandler
+	// 		});
+	// 	}
+	// }).addTo(map);
 }
 
 /**

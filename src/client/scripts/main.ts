@@ -1,5 +1,5 @@
 /// <reference path="./leaflet-typings.d.ts" />
-import 'leaflet.sync/L.Map.Sync';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { DEPRECATED_CACHES } from './constants';
 import {
 	$,
@@ -15,7 +15,13 @@ import {
 } from './functions';
 import { MapLevel } from './types';
 import MobileDetect from 'mobile-detect';
-import { LeafletEventHandlerFn } from 'leaflet';
+import { Map, setWorkerUrl } from 'maplibre-gl';
+
+const syncMaps = require('@mapbox/mapbox-gl-sync-move');
+
+
+
+setWorkerUrl('/maplibre-gl-worker.mjs');
 
 //#region Clear deprecated caches
 for (const name of DEPRECATED_CACHES) {
@@ -33,7 +39,7 @@ const datasets = {
 	li: loadData('li')
 };
 
-const maps = {
+const maps: Record<MapLevel, Map> = {
 	sido: createMap('map-sido'),
 	sgg: createMap('map-sgg'),
 	emdong: createMap('map-emdong'),
@@ -42,20 +48,18 @@ const maps = {
 
 const ALL_FEATURES = {};
 
-for (const [level, promise] of Object.entries(datasets)) {
-	promise.then((data) => {
-		initMap(maps[<MapLevel>level], <MapLevel>level, data, ALL_FEATURES);
+for (const [level, map] of Object.entries(maps)) {
+	map.on('load', () => {
+    const promise = datasets[level as MapLevel];
+    promise.then((data) => {
+      initMap(map, level as MapLevel, data, ALL_FEATURES);
+    });
 	});
 }
 
+
 // Sync maps
-for (const map of Object.values(maps)) {
-	for (const otherMap of Object.values(maps)) {
-		if (map !== otherMap) {
-			map.sync(otherMap);
-		}
-	}
-}
+syncMaps(...Object.values(maps));
 //#endregion
 
 //#region Bind settings UI
@@ -164,6 +168,7 @@ const mouseDown = {
 };
 
 $$('#maps-container .map').forEach((map) => {
+  return;
 	const level = map.id.slice(4) as MapLevel;
 
 	// This feeds the mouseDown record

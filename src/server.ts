@@ -7,10 +7,20 @@ const PUBLIC_GEO_FILES: Record<string, string> = {
 	li: '../data/topo/li.json'
 };
 
+const MAPLIBRE_DIST = '../node_modules/maplibre-gl/dist';
+
 const server = Bun.serve({
 	port: process.env.PORT || process.env.BUN_PORT || 3000,
 	routes: {
 		'/': viewer,
+		'/maplibre-gl-worker.mjs': () =>
+			new Response(Bun.file(`${MAPLIBRE_DIST}/maplibre-gl-worker.mjs`), {
+				headers: { 'Content-Type': 'text/javascript' }
+			}),
+		'/maplibre-gl-shared.mjs': () =>
+			new Response(Bun.file(`${MAPLIBRE_DIST}/maplibre-gl-shared.mjs`), {
+				headers: { 'Content-Type': 'text/javascript' }
+			}),
 		'/public/:file': (req) => {
 			const { file } = req.params;
 			if (file.includes('..')) {

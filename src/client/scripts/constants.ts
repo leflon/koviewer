@@ -1,4 +1,3 @@
-import { LatLngExpression } from 'leaflet';
 import { MapLevel } from './types';
 
 /**
@@ -24,7 +23,7 @@ export const DEPRECATED_CACHES = ['geojson-cache-v1', 'geojson-cache-v2', 'geojs
 /**
  * The default coordinates to center the maps at. (in this case, about the center of the south-korean peninsula)
  */
-export const DEFAULT_LATLNG: LatLngExpression = [37.58, 127];
+export const DEFAULT_LATLNG: [number, number] = [127, 37.58];
 
 /**
  * The default zoom level of the maps.
