@@ -31,7 +31,7 @@ const DIVISIONS_COLORS = {
 };
 
 
-
+let ID = 1;
 function convertFile(level) {
 	console.log(`[${level}] Starting conversion...`);
 	const prefix = FEATURE_PREFIX_BY_LEVEL[level];
@@ -49,6 +49,7 @@ function convertFile(level) {
       for (const feature of geojson.features) {
         const suffix = feature.properties['name'].at(-1);
         feature.properties['color'] = DIVISIONS_COLORS[level][suffix] ?? '#000';
+        feature.properties['id'] = ID++;
       }
       await Bun.write(tempFileName, JSON.stringify(geojson));
       console.log(`[${level}] Done.`);

@@ -1,4 +1,4 @@
-import { Feature, GeoJsonProperties, Geometry } from 'geojson';
+import { BBox, Feature, GeoJsonProperties, Geometry, Polygon } from 'geojson';
 import { feature } from 'topojson-client';
 import {
 	CACHE_NAME,
@@ -12,29 +12,23 @@ import {
 	TOPOLOGY_OBJECTS_KEY
 } from './constants';
 import { LayerMap as FeatureMap, MapLevel } from './types';
-import { Map } from 'maplibre-gl';
+import { LngLatBoundsLike, Map, MapGeoJSONFeature, MapMouseEvent, StyleLayer } from 'maplibre-gl';
 
 /** Shortcut for `document.querySelector` */
 export const $ = (selector: string) => document.querySelector(selector) as HTMLElement;
 /** Shortcut for `document.querySelectorAll` */
 export const $$ = (selector: string) => document.querySelectorAll(selector);
 
+const LEVELS_IN_ORDER = ['li', 'emdong', 'sgg', 'sido'] as const;
 /**
  * Gets the higher administrative level of a given level.
  * @param level The current level
  * @returns The higher level, or `null` if the given level is the highest one.
  */
 export function getHigherLevel(level: MapLevel): MapLevel | null {
-	switch (level) {
-		case 'li':
-			return 'emdong';
-		case 'emdong':
-			return 'sgg';
-		case 'sgg':
-			return 'sido';
-		case 'sido':
-			return null;
-	}
+	const index = LEVELS_IN_ORDER.indexOf(level);
+	if (index === -1) return null;
+	return LEVELS_IN_ORDER[index + 1] ?? null;
 }
 
 /**
@@ -45,7 +39,7 @@ export function getHigherLevel(level: MapLevel): MapLevel | null {
  */
 export async function topoToGeo(level: MapLevel, topo: TopoJSON.Topology) {
 	const geojson = feature(topo, TOPOLOGY_OBJECTS_KEY[level]);
-  console.log(geojson);
+	console.log(geojson);
 	return geojson;
 }
 
@@ -55,10 +49,10 @@ export async function topoToGeo(level: MapLevel, topo: TopoJSON.Topology) {
  * @returns The corresponding GeoJSON data.
  */
 export async function loadData(level: MapLevel) {
-  if (process.env.NODE_ENV === 'development') {
-    console.warn('Bypassing cache for development.');
-    return topoToGeo(level, await (await fetch(`/geo/${level}`)).json());
-  }
+	if (process.env.NODE_ENV === 'development') {
+		console.warn('Bypassing cache for development.');
+		return topoToGeo(level, await (await fetch(`/geo/${level}`)).json());
+	}
 	const url = `/geo/${level}`;
 	const cache = await caches.open(CACHE_NAME);
 
@@ -87,20 +81,10 @@ export function createMap(htmlId: string): Map {
 		center: DEFAULT_LATLNG,
 		zoom: DEFAULT_ZOOM_LEVEL
 	});
-	// const map = L.map(htmlId, {
-	// 	preferCanvas: true,
-	// 	renderer: L.canvas({
-	// 		padding: 0.5
-	// 	}),
-	// 	zoomControl: false,
-	// }).setView(DEFAULT_LATLNG, DEFAULT_ZOOM_LEVEL);
-	// // We disable double click zoom to prevent zooming
-	// // when we simulate double click events (see in initMap->onEachFeature)
-	// // That would simply crash the app
-	// map.attributionControl.addAttribution('<a href="https://carto.com/attributions" target="_blank">Carto</a> | <a href="http://www.gisdeveloper.co.kr/?p=2332" target="_blank">gisdeveloper.co.kr</a>');
-	// map.doubleClickZoom.disable();
-	// L.control.zoom({ position: 'bottomright' }).addTo(map);
-	// L.control.scale({ imperial: false }).addTo(map);
+	// We disable double click zoom to prevent zooming
+	// when we simulate double click events 
+	// That would simply crash the app
+  map.doubleClickZoom.disable();
 	return map;
 }
 
@@ -117,7 +101,8 @@ export async function initMap(map: Map, level: MapLevel, features: Feature, feat
 
 	map.addSource('gis', {
 		type: 'geojson',
-		data: features
+		data: features,
+		promoteId: 'id'
 	});
 	map.addLayer({
 		id: 'gis-fill',
@@ -125,7 +110,12 @@ export async function initMap(map: Map, level: MapLevel, features: Feature, feat
 		type: 'fill',
 		paint: {
 			'fill-color': ['get', 'color'],
-			'fill-opacity': 0.8,
+			'fill-opacity': [
+				'case',
+				['to-boolean', ['feature-state', 'hover']],
+				HIGHLIGHTED_FILL_OPACITY,
+				REGULAR_FILL_OPACITY
+			]
 		}
 	});
 	map.addLayer({
@@ -133,13 +123,42 @@ export async function initMap(map: Map, level: MapLevel, features: Feature, feat
 		source: 'gis',
 		type: 'line',
 		paint: {
-			'line-color': 'white',
+			'line-color': ['get', 'color'],
 			'line-width': STROKE_WEIGHT
 		}
 	});
 
-	// This ensures only one feature is highlighted at a time
-	let currentHighlight: L.FeatureGroup | null = null;
+	let currentHighlight: Feature | null = null;
+
+	const mouseMoveHandler = (
+		e: MapMouseEvent & {
+			features?: MapGeoJSONFeature[];
+		} & Object
+	) => {
+    console.log(e);
+		if (currentHighlight) blurFeature(map, currentHighlight);
+		if (!e.features?.[0]) return;
+		const feature = e.features[0];
+		currentHighlight = feature;
+		highlightFeature(map, feature);
+		
+		const suffix = feature.properties.name.slice(-1);
+		tooltip.style.display = 'block';
+		tooltip.style.color = DIVISIONS_COLORS[level][suffix];
+		tooltip.innerHTML = `<div class='tooltip-ko'>${feature.properties.name}</div><div class='tooltip-en'>${feature.properties.name_eng}</div>`;
+	};
+	map.on('mousemove', 'gis-fill', mouseMoveHandler);
+	map.on('dblclick', 'gis-fill', mouseMoveHandler);
+	map.on('mouseleave', 'gis-fill', () => {
+		if (currentHighlight) blurFeature(map, currentHighlight);
+		tooltip.style.display = 'none';
+	});
+
+	map.on('click', 'gis-fill', (e) => {
+		if (!e.features?.[0]) return;
+		const feature = e.features[0];
+    jumpTo(map, feature);
+	});
 
 	// L.geoJSON(features, {
 	// 	style: (feature) => {
@@ -199,42 +218,74 @@ export async function initMap(map: Map, level: MapLevel, features: Feature, feat
  * @param query The name query, any features which name includes this string will be matched
  * @returns The matched features
  */
-export function findFeaturesByName(features: FeatureMap, query: string): FeatureMap {
-	const foundNames = Object.keys(features)
-		.filter((name) => name.toLowerCase().includes(query))
-		.slice(0, 20);
-
-	const foundFeatures: FeatureMap = {};
-	for (const name of foundNames) {
-		foundFeatures[name] = features[name];
+export function findFeaturesByName(maps: Map[], query: string): Array<{
+  map: Map,
+  feature: Feature
+}> {
+	const foundFeatures: Array<{ map: Map, feature: Feature }> = [];
+	for (const map of maps) {
+    const features = map.querySourceFeatures('gis', {
+      filter: ['any',
+        ['in', query.toLowerCase(), ['downcase', ['get', 'name_eng']]],
+        ['in', query.toLowerCase(), ['get', 'name_eng']]
+      ]
+    });
+    foundFeatures.push(...features.map((feature) => ({ map, feature })));
 	}
-	return foundFeatures;
+  return foundFeatures;
+}
+
+export function bbox(feature: Feature): LngLatBoundsLike {
+const coords = (feature.geometry as any).coordinates.flat(Infinity);
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+  for (let i = 0; i < coords.length; i += 2) {
+    const x = coords[i], y = coords[i + 1];
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+  }
+
+  return [minX, minY, maxX, maxY];
 }
 
 /**
  * Zooms into a given feature.
  * @param feature The feature to zoom into.
  */
-export function jumpTo(feature: L.FeatureGroup) {
-	(<any>feature)._map.fitBounds(feature.getBounds());
+export function jumpTo(map: Map, feature: Feature) {
+  map.fitBounds(bbox(feature), {padding: 20, duration: 500});
 }
 
 /**
  * Highlights a feature by making it more opaque.
+ * @param map The map to highlight the feature on
+ * @param layer The layer to which the feature belongs
  * @param feature The feature to highlight
  */
-export function highlightFeature(feature: L.FeatureGroup) {
-	feature.setStyle({
-		fillOpacity: HIGHLIGHTED_FILL_OPACITY
-	});
+export function highlightFeature(map: Map, feature: Feature) {
+	map.setFeatureState(
+		{
+			source: 'gis',
+			id: feature.id as string
+		},
+		{ hover: true }
+	);
 }
 
 /**
  * Un-highlight a feature
- * @param feature The feature to blur
+ * @param map The map to un-highlight the feature on
+ * @param layer The layer to which the feature belongs
+ * @param feature The feature to un-highlight
  */
-export function blurFeature(feature: L.FeatureGroup) {
-	feature.setStyle({
-		fillOpacity: REGULAR_FILL_OPACITY
-	});
+export function blurFeature(map: Map, feature: Feature) {
+	map.setFeatureState(
+		{
+			source: 'gis',
+			id: feature.id as string
+		},
+		{ hover: false }
+	);
 }

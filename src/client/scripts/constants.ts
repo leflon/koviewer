@@ -33,12 +33,12 @@ export const DEFAULT_ZOOM_LEVEL = 10;
 /**
  * The regular fillOpacity of all leaflet features
  */
-export const REGULAR_FILL_OPACITY = 0.2;
+export const REGULAR_FILL_OPACITY = 0.4;
 
 /**
  * The fillOpacity of highlighted leaflet features
  */
-export const HIGHLIGHTED_FILL_OPACITY = 0.4;
+export const HIGHLIGHTED_FILL_OPACITY = 0.6;
 
 /**
  * The stroke weight of features boundaries
