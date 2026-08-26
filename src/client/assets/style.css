@@ -380,6 +380,24 @@ header {
 	}
 }
 
+#attributions {
+	position: absolute;
+	bottom: 5px;
+	right: 5px;
+	padding: 2px 8px;
+	font-size: 7pt;
+	z-index: 10000;
+	color: #fff;
+	border-radius: 4px;
+	background: #000a;
+	& a {
+	  color: inherit;
+		&:hover {
+		  text-decoration: none;
+		}
+	}
+}
+
 @media screen and (max-aspect-ratio: 1/1) {
 	#maps-container[data-displayed-maps='3'] {
 		flex-direction: column;
