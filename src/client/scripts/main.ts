@@ -295,7 +295,7 @@ input.addEventListener('input', (e) => {
     const suffix = result.feature.properties!.name.at(-1);
 		const elm = document.createElement('div');
 		elm.className = 'search-result';
-		elm.textContent = fullName;
+		elm.innerHTML = `<div>${fullName}</div>`;
     elm.title = fullName;
     elm.style.setProperty('--color', DIVISIONS_COLORS[result.level][suffix]);
 		elm.setAttribute('tabindex', '0'); // Alows tab focus
