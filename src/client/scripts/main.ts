@@ -15,7 +15,7 @@ import {
 } from './functions';
 import { MapLevel } from './types';
 import MobileDetect from 'mobile-detect';
-import { Map, setWorkerUrl } from 'maplibre-gl';
+import { Map, MapMovementEvent, setWorkerUrl } from 'maplibre-gl';
 
 const syncMaps = require('@mapbox/mapbox-gl-sync-move');
 
@@ -169,6 +169,7 @@ const mouseDown = {
 
 $$('#maps-container .map').forEach((map) => {
 	const level = map.id.slice(4) as MapLevel;
+	const tooltip = map.parentElement?.querySelector('.tooltip') as HTMLDivElement;
 
 	map.addEventListener('mousedown', () => (mouseDown[level] = true));
 	map.addEventListener('mouseup', () => (mouseDown[level] = false));
@@ -177,6 +178,8 @@ $$('#maps-container .map').forEach((map) => {
 	map.addEventListener('mouseleave', () => {
 		if (IS_MOBILE) return;
 		mouseDown[level] = false;
+    console.log(tooltip, map);
+    tooltip!.style.display = 'none';
 		// Also hide the tooltip of the higher map (and by cascade, all higher maps) by simulating mouseleave on them
 		const higherMap = $(`#map-${getHigherLevel(level)}`);
 		if (higherMap) higherMap.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
@@ -237,7 +240,7 @@ if (IS_MOBILE) {
 	let isMoving = false;
 
 	for (const map of Object.values(maps)) {
-		const handler = (e) => {
+		const handler = (e: MapMovementEvent) => {
 			if (!isMoving) return;
 			const container = map._container;
 			const rect = container.getBoundingClientRect();
