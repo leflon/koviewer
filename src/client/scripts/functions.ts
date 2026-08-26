@@ -253,10 +253,18 @@ const coords = (feature.geometry as any).coordinates.flat(Infinity);
 
 /**
  * Zooms into a given feature.
- * @param feature The feature to zoom into.
+ * @param target The feature to zoom into.
  */
-export function jumpTo(map: Map, feature: Feature) {
-  map.fitBounds(bbox(feature), {padding: 40});
+export function jumpTo(map: Map, target: Feature) {
+  const source = map.getSource('gis')?.serialize() as { data: { features: Feature[] } };
+  if (!source)
+    return;
+  console.log(source);
+  const fullFeature = source.data.features.find(f => f.properties!.id === target.properties!.id);
+  if (!fullFeature)
+    return;
+  console.log(fullFeature);
+  map.fitBounds(bbox(fullFeature), {padding: 40});
 }
 
 /**
