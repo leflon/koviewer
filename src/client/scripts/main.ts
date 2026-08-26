@@ -178,7 +178,6 @@ $$('#maps-container .map').forEach((map) => {
 	map.addEventListener('mouseleave', () => {
 		if (IS_MOBILE) return;
 		mouseDown[level] = false;
-    console.log(tooltip, map);
     tooltip!.style.display = 'none';
 		// Also hide the tooltip of the higher map (and by cascade, all higher maps) by simulating mouseleave on them
 		const higherMap = $(`#map-${getHigherLevel(level)}`);

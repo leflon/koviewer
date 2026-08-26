@@ -149,6 +149,7 @@ export async function initMap(map: Map, level: MapLevel, features: Feature, feat
 	map.on('dblclick', 'gis-fill', mouseMoveHandler);
 	map.on('mouseleave', 'gis-fill', () => {
 		if (currentHighlight) blurFeature(map, currentHighlight);
+		tooltip.style.display = 'none';
 	});
 
 	map.on('click', 'gis-fill', (e) => {
