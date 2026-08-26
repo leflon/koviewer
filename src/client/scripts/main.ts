@@ -1,6 +1,6 @@
 /// <reference path="./leaflet-typings.d.ts" />
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { DEPRECATED_CACHES } from './constants';
+import { DEPRECATED_CACHES, DIVISIONS_COLORS } from './constants';
 import {
 	$,
 	$$,
@@ -285,16 +285,19 @@ input.addEventListener('input', (e) => {
 		hideResults();
 		return;
 	}
+  if (query.length < 2) return;
 
-	const results = findFeaturesByName(Object.values(maps), query);
+	const results = findFeaturesByName(maps, query);
 	/* Filter out hidden maps' features from the results */
 	clearResults();
 	for (const result of results) {
 	  const fullName = `${result.feature.properties!.name} (${result.feature.properties!.name_eng})`;
+    const suffix = result.feature.properties!.name.at(-1);
 		const elm = document.createElement('div');
 		elm.className = 'search-result';
 		elm.textContent = fullName;
-		elm.title = fullName;
+    elm.title = fullName;
+    elm.style.setProperty('--color', DIVISIONS_COLORS[result.level][suffix]);
 		elm.setAttribute('tabindex', '0'); // Alows tab focus
 
 		const select = () => {

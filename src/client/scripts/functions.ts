@@ -39,7 +39,6 @@ export function getHigherLevel(level: MapLevel): MapLevel | null {
  */
 export async function topoToGeo(level: MapLevel, topo: TopoJSON.Topology) {
 	const geojson = feature(topo, TOPOLOGY_OBJECTS_KEY[level]);
-	console.log(geojson);
 	return geojson;
 }
 
@@ -135,7 +134,6 @@ export async function initMap(map: Map, level: MapLevel, features: Feature, feat
 			features?: MapGeoJSONFeature[];
 		} & Object
 	) => {
-    console.log(e);
 		if (currentHighlight) blurFeature(map, currentHighlight);
 		if (!e.features?.[0]) return;
 		const feature = e.features[0];
@@ -218,20 +216,23 @@ export async function initMap(map: Map, level: MapLevel, features: Feature, feat
  * @param query The name query, any features which name includes this string will be matched
  * @returns The matched features
  */
-export function findFeaturesByName(maps: Map[], query: string): Array<{
+export function findFeaturesByName(maps: Record<MapLevel, Map>, query: string): Array<{
+  level: MapLevel,
   map: Map,
   feature: Feature
 }> {
-	const foundFeatures: Array<{ map: Map, feature: Feature }> = [];
-	for (const map of maps) {
-    const features = map.querySourceFeatures('gis', {
-      filter: ['any',
-        ['in', query.toLowerCase(), ['downcase', ['get', 'name_eng']]],
-        ['in', query.toLowerCase(), ['get', 'name_eng']]
-      ]
-    });
-    foundFeatures.push(...features.map((feature) => ({ map, feature })));
-	}
+	const foundFeatures: Array<{ level: MapLevel, map: Map, feature: Feature }> = [];
+  for (const [level, map] of Object.entries(maps)) {
+    const source = map.getSource('gis');
+    const serialized = source?.serialize() as { data: {features: Feature[] } };
+    if (!serialized) return [];
+    
+    const matches = serialized.data.features.filter(f =>
+      f.properties!.name_eng.toLowerCase().includes(query.toLowerCase())
+      || f.properties!.name.includes(query)
+    );
+    foundFeatures.push(...matches.map((feature) => ({ level: level as MapLevel, map, feature })));
+  }
   return foundFeatures;
 }
 
@@ -255,7 +256,7 @@ const coords = (feature.geometry as any).coordinates.flat(Infinity);
  * @param feature The feature to zoom into.
  */
 export function jumpTo(map: Map, feature: Feature) {
-  map.fitBounds(bbox(feature), {padding: 20, duration: 500});
+  map.fitBounds(bbox(feature), {padding: 40});
 }
 
 /**
@@ -268,7 +269,7 @@ export function highlightFeature(map: Map, feature: Feature) {
 	map.setFeatureState(
 		{
 			source: 'gis',
-			id: feature.id as string
+			id: feature.properties!.id as string
 		},
 		{ hover: true }
 	);
@@ -284,7 +285,7 @@ export function blurFeature(map: Map, feature: Feature) {
 	map.setFeatureState(
 		{
 			source: 'gis',
-			id: feature.id as string
+			id: feature.properties!.id as string
 		},
 		{ hover: false }
 	);

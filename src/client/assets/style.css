@@ -202,8 +202,20 @@ header {
 			overflow: hidden;
 			word-wrap: break-word;
 			white-space: nowrap;
-
 			cursor: pointer;
+			display: flex;
+			align-items: center;
+
+			&:before {
+			  content: '';
+				display: block;
+				width: 4px;
+				height: 4px;
+				border-radius: 50%;
+				background: var(--color);
+				margin-right: 4px;
+				flex-shrink: 0;
+			}
 
 			&:hover {
 				background: #eee;
