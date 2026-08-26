@@ -78,7 +78,8 @@ export function createMap(htmlId: string): Map {
 		container: htmlId,
 		style: 'https://tiles.openfreemap.org/styles/positron',
 		center: DEFAULT_LATLNG,
-		zoom: DEFAULT_ZOOM_LEVEL
+    zoom: DEFAULT_ZOOM_LEVEL,
+		attributionControl: false
 	});
 	// We disable double click zoom to prevent zooming
 	// when we simulate double click events 

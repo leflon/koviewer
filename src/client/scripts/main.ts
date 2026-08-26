@@ -304,6 +304,9 @@ input.addEventListener('input', (e) => {
 
 		const select = () => {
 			jumpTo(result.map, result.feature);
+			const wrapper = $(`.map-wrapper:has(#map-${result.level})`);
+			wrapper?.classList.add('highlighted');
+      setTimeout(() => { wrapper?.classList.remove('highlighted'); }, 1000);
 			hideResults();
 			clearResults();
 			input.value = '';
