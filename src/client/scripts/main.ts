@@ -1,6 +1,6 @@
 /// <reference path="./leaflet-typings.d.ts" />
-import 'leaflet.sync/L.Map.Sync';
-import { DEPRECATED_CACHES } from './constants';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { DEPRECATED_CACHES, DIVISIONS_COLORS } from './constants';
 import {
 	$,
 	$$,
@@ -15,7 +15,13 @@ import {
 } from './functions';
 import { MapLevel } from './types';
 import MobileDetect from 'mobile-detect';
-import { LeafletEventHandlerFn } from 'leaflet';
+import { Map, MapMovementEvent, setWorkerUrl } from 'maplibre-gl';
+
+const syncMaps = require('@mapbox/mapbox-gl-sync-move');
+
+
+
+setWorkerUrl('/maplibre-gl-worker.mjs');
 
 //#region Clear deprecated caches
 for (const name of DEPRECATED_CACHES) {
@@ -33,7 +39,7 @@ const datasets = {
 	li: loadData('li')
 };
 
-const maps = {
+const maps: Record<MapLevel, Map> = {
 	sido: createMap('map-sido'),
 	sgg: createMap('map-sgg'),
 	emdong: createMap('map-emdong'),
@@ -42,20 +48,18 @@ const maps = {
 
 const ALL_FEATURES = {};
 
-for (const [level, promise] of Object.entries(datasets)) {
-	promise.then((data) => {
-		initMap(maps[<MapLevel>level], <MapLevel>level, data, ALL_FEATURES);
+for (const [level, map] of Object.entries(maps)) {
+	map.on('load', () => {
+    const promise = datasets[level as MapLevel];
+    promise.then((data) => {
+      initMap(map, level as MapLevel, data, ALL_FEATURES);
+    });
 	});
 }
 
+
 // Sync maps
-for (const map of Object.values(maps)) {
-	for (const otherMap of Object.values(maps)) {
-		if (map !== otherMap) {
-			map.sync(otherMap);
-		}
-	}
-}
+syncMaps(...Object.values(maps));
 //#endregion
 
 //#region Bind settings UI
@@ -74,7 +78,7 @@ for (const button of $$('#controls .show-toggle')) {
 		// Timeout lets the map be hidden before we invalidate the sizes,
 		// which reduces lag
 		setTimeout(() => {
-			for (const map of Object.values(maps)) map.invalidateSize();
+			for (const map of Object.values(maps)) map.resize();
 		});
 	});
 }
@@ -155,7 +159,7 @@ if (IS_MOBILE) {
 	$$('.map-mobile-crosshair').forEach((crosshair) => crosshair.remove());
 }
 
-// Track mouse down state to avoid conflicting with Leaflet drag interactions
+// Track mouse down state to avoid conflicting with drag interactions
 const mouseDown = {
 	sido: false,
 	sgg: false,
@@ -165,8 +169,8 @@ const mouseDown = {
 
 $$('#maps-container .map').forEach((map) => {
 	const level = map.id.slice(4) as MapLevel;
+	const tooltip = map.parentElement?.querySelector('.tooltip') as HTMLDivElement;
 
-	// This feeds the mouseDown record
 	map.addEventListener('mousedown', () => (mouseDown[level] = true));
 	map.addEventListener('mouseup', () => (mouseDown[level] = false));
 
@@ -174,9 +178,7 @@ $$('#maps-container .map').forEach((map) => {
 	map.addEventListener('mouseleave', () => {
 		if (IS_MOBILE) return;
 		mouseDown[level] = false;
-		// We have to dispatch the event to the actual Leaflet map canvas, so that the underlying
-		// features also receive the event and unhighlight themselves, causing the tooltips to hide
-		$(`#map-${level} .leaflet-map-pane canvas`).dispatchEvent(new MouseEvent('mouseout'));
+    tooltip!.style.display = 'none';
 		// Also hide the tooltip of the higher map (and by cascade, all higher maps) by simulating mouseleave on them
 		const higherMap = $(`#map-${getHigherLevel(level)}`);
 		if (higherMap) higherMap.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
@@ -220,7 +222,7 @@ $$('#maps-container .map').forEach((map) => {
 
 		const newClientX = higherMapRect.left + e.clientX - mapRect.left;
 		const newClientY = higherMapRect.top + e.clientY - mapRect.top;
-		const canvas = $(`#map-${higherLevel} .leaflet-map-pane canvas`) as HTMLCanvasElement;
+		const canvas = $(`#map-${higherLevel} canvas`) as HTMLCanvasElement;
 		if (!canvas) return;
 		const event = new MouseEvent('mousemove', {
 			clientX: newClientX,
@@ -237,13 +239,15 @@ if (IS_MOBILE) {
 	let isMoving = false;
 
 	for (const map of Object.values(maps)) {
-		const handler: LeafletEventHandlerFn = (e) => {
+		const handler = (e: MapMovementEvent) => {
 			if (!isMoving) return;
 			const container = map._container;
 			const rect = container.getBoundingClientRect();
 			const center = [rect.left + rect.width / 2, rect.top + rect.height / 2];
-			const canvas = container.querySelector(`.leaflet-map-pane canvas`) as HTMLCanvasElement;
+			const canvas = container.querySelector(`canvas`) as HTMLCanvasElement;
 			if (!canvas) return;
+			// With mousemove, it wouldn't trigger the handlers for the map that is being dragged.
+			// We force the handlers using dblclick, as it wouldn't be used otherwise.
 			const event = new MouseEvent('dblclick', {
 				clientX: center[0],
 				clientY: center[1],
@@ -251,10 +255,10 @@ if (IS_MOBILE) {
 			});
 			canvas.dispatchEvent(event);
 		};
-		map.addEventListener('dragstart', () => (isMoving = true));
-		map.addEventListener('move', handler);
-		map.addEventListener('dragend', () => (isMoving = false));
-		map.addEventListener('moveend', handler);
+		map.on('dragstart', () => (isMoving = true));
+		map.on('move', handler);
+		map.on('dragend', () => (isMoving = false));
+		map.on('moveend', handler);
 	}
 }
 //#endregion
@@ -283,42 +287,42 @@ input.addEventListener('input', (e) => {
 		hideResults();
 		return;
 	}
+  if (query.length < 2) return;
 
-	const results = findFeaturesByName(ALL_FEATURES, query);
+	const results = findFeaturesByName(maps, query);
 	/* Filter out hidden maps' features from the results */
-	for (const [name, feature] of Object.entries(results)) {
-		const mapElm = (feature as any)._map._container;
-		const isHidden = !mapElm.classList.contains('visible');
-		if (isHidden) {
-			delete results[name];
-		}
-	}
 	clearResults();
-	for (const [name, feature] of Object.entries(results)) {
+	for (const result of results) {
+	  const fullName = `${result.feature.properties!.name} (${result.feature.properties!.name_eng})`;
+    const suffix = result.feature.properties!.name.at(-1);
 		const elm = document.createElement('div');
 		elm.className = 'search-result';
-		elm.textContent = name;
-		elm.title = name;
+		elm.innerHTML = `<div>${fullName}</div>`;
+    elm.title = fullName;
+    elm.style.setProperty('--color', DIVISIONS_COLORS[result.level][suffix]);
 		elm.setAttribute('tabindex', '0'); // Alows tab focus
 
 		const select = () => {
-			jumpTo(feature);
+			jumpTo(result.map, result.feature);
+			const wrapper = $(`.map-wrapper:has(#map-${result.level})`);
+			wrapper?.classList.add('highlighted');
+      setTimeout(() => { wrapper?.classList.remove('highlighted'); }, 1000);
 			hideResults();
 			clearResults();
 			input.value = '';
-			blurFeature(feature);
+			blurFeature(result.map, result.feature);
 		};
 
 		showResults();
 
 		elm.addEventListener('click', select);
-		elm.addEventListener('mouseenter', () => highlightFeature(feature));
-		elm.addEventListener('mouseleave', () => blurFeature(feature));
+		elm.addEventListener('mouseenter', () => highlightFeature(result.map, result.feature));
+		elm.addEventListener('mouseleave', () => blurFeature(result.map, result.feature));
 		// Keyboard navigation
 		elm.addEventListener('keydown', (e) => e.key === 'Enter' && select());
-		elm.addEventListener('focus', () => highlightFeature(feature));
+		elm.addEventListener('focus', () => highlightFeature(result.map, result.feature));
 		elm.addEventListener('blur', () => {
-			blurFeature(feature);
+			blurFeature(result.map, result.feature);
 			// timeout: Same reason as above
 			setTimeout(() => {
 				if (

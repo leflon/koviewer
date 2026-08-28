@@ -1,4 +1,3 @@
-import { LatLngExpression } from 'leaflet';
 import { MapLevel } from './types';
 
 /**
@@ -14,17 +13,17 @@ export const TOPOLOGY_OBJECTS_KEY: Record<MapLevel, string> = {
 /**
  * The name of the current cache storage
  */
-export const CACHE_NAME = 'geojson-cache-v4';
+export const CACHE_NAME = 'geojson-cache-v5';
 
 /**
  * The names of the previous versions' cache storages
  */
-export const DEPRECATED_CACHES = ['geojson-cache-v1', 'geojson-cache-v2', 'geojson-cache-v3'];
+export const DEPRECATED_CACHES = ['geojson-cache-v1', 'geojson-cache-v2', 'geojson-cache-v3', 'geojson-cache-v4'];
 
 /**
  * The default coordinates to center the maps at. (in this case, about the center of the south-korean peninsula)
  */
-export const DEFAULT_LATLNG: LatLngExpression = [37.58, 127];
+export const DEFAULT_LATLNG: [number, number] = [127, 37.58];
 
 /**
  * The default zoom level of the maps.
@@ -34,12 +33,12 @@ export const DEFAULT_ZOOM_LEVEL = 10;
 /**
  * The regular fillOpacity of all leaflet features
  */
-export const REGULAR_FILL_OPACITY = 0.2;
+export const REGULAR_FILL_OPACITY = 0.4;
 
 /**
  * The fillOpacity of highlighted leaflet features
  */
-export const HIGHLIGHTED_FILL_OPACITY = 0.4;
+export const HIGHLIGHTED_FILL_OPACITY = 0.6;
 
 /**
  * The stroke weight of features boundaries

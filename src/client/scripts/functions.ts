@@ -1,5 +1,4 @@
-import { Feature } from 'geojson';
-import L, { LeafletEventHandlerFn } from 'leaflet';
+import { BBox, Feature, GeoJsonProperties, Geometry, Polygon } from 'geojson';
 import { feature } from 'topojson-client';
 import {
 	CACHE_NAME,
@@ -13,28 +12,23 @@ import {
 	TOPOLOGY_OBJECTS_KEY
 } from './constants';
 import { LayerMap as FeatureMap, MapLevel } from './types';
+import { LngLatBoundsLike, Map, MapGeoJSONFeature, MapMouseEvent, StyleLayer } from 'maplibre-gl';
 
 /** Shortcut for `document.querySelector` */
 export const $ = (selector: string) => document.querySelector(selector) as HTMLElement;
 /** Shortcut for `document.querySelectorAll` */
 export const $$ = (selector: string) => document.querySelectorAll(selector);
 
+const LEVELS_IN_ORDER = ['li', 'emdong', 'sgg', 'sido'] as const;
 /**
  * Gets the higher administrative level of a given level.
  * @param level The current level
  * @returns The higher level, or `null` if the given level is the highest one.
  */
 export function getHigherLevel(level: MapLevel): MapLevel | null {
-	switch (level) {
-		case 'li':
-			return 'emdong';
-		case 'emdong':
-			return 'sgg';
-		case 'sgg':
-			return 'sido';
-		case 'sido':
-			return null;
-	}
+	const index = LEVELS_IN_ORDER.indexOf(level);
+	if (index === -1) return null;
+	return LEVELS_IN_ORDER[index + 1] ?? null;
 }
 
 /**
@@ -54,6 +48,10 @@ export async function topoToGeo(level: MapLevel, topo: TopoJSON.Topology) {
  * @returns The corresponding GeoJSON data.
  */
 export async function loadData(level: MapLevel) {
+	if (process.env.NODE_ENV === 'development') {
+		console.warn('Bypassing cache for development.');
+		return topoToGeo(level, await (await fetch(`/geo/${level}`)).json());
+	}
 	const url = `/geo/${level}`;
 	const cache = await caches.open(CACHE_NAME);
 
@@ -75,21 +73,18 @@ export async function loadData(level: MapLevel) {
  * @param htmlId The id of the HTML element rendering the map.
  * @returns The created map object
  */
-export function createMap(htmlId: string): L.Map {
-	const map = L.map(htmlId, {
-		preferCanvas: true,
-		renderer: L.canvas({
-			padding: 0.5
-		}),
-		zoomControl: false,
-	}).setView(DEFAULT_LATLNG, DEFAULT_ZOOM_LEVEL);
+export function createMap(htmlId: string): Map {
+	const map = new Map({
+		container: htmlId,
+		style: 'https://tiles.openfreemap.org/styles/positron',
+		center: DEFAULT_LATLNG,
+    zoom: DEFAULT_ZOOM_LEVEL,
+		attributionControl: false
+	});
 	// We disable double click zoom to prevent zooming
-	// when we simulate double click events (see in initMap->onEachFeature)
+	// when we simulate double click events 
 	// That would simply crash the app
-	map.attributionControl.addAttribution('<a href="https://carto.com/attributions" target="_blank">Carto</a> | <a href="http://www.gisdeveloper.co.kr/?p=2332" target="_blank">gisdeveloper.co.kr</a>');
-	map.doubleClickZoom.disable();
-	L.control.zoom({ position: 'bottomright' }).addTo(map);
-	L.control.scale({ imperial: false }).addTo(map);
+  map.doubleClickZoom.disable();
 	return map;
 }
 
@@ -100,65 +95,120 @@ export function createMap(htmlId: string): L.Map {
  * @param features The features to render onto the map
  * @param featuresStore The record that will receive all the features from this map
  */
-export async function initMap(map: L.Map, level: MapLevel, features: Feature, featuresStore: Record<string, L.Layer>) {
+export async function initMap(map: Map, level: MapLevel, features: Feature, featuresStore: Record<string, L.Layer>) {
 	const tooltip = $(`.tooltip[data-bind="${level}"]`);
 	$(`#map-${level}`).dataset.loading = 'false';
-	const baseLayer = L.tileLayer(TILE_LAYER_URI);
-	baseLayer.addTo(map);
 
-	// This ensures only one feature is highlighted at a time
-	let currentHighlight: L.FeatureGroup | null = null;
-
-	L.geoJSON(features, {
-		style: (feature) => {
-			const suffix = feature!.properties.name.slice(-1);
-			return {
-				color: DIVISIONS_COLORS[level][suffix],
-				fillOpacity: REGULAR_FILL_OPACITY,
-				weight: STROKE_WEIGHT
-			};
-		},
-		onEachFeature: (feature, layer) => {
-			const name = feature.properties.name;
-			const englishName = feature.properties.name_eng;
-			featuresStore[`${name} (${englishName})`] = layer;
-			const suffix = name.slice(-1);
-			const mouseoverHandler: LeafletEventHandlerFn = (e) => {
-				/* This is useful when using our 'dblclick' event simulating hack.
-					Since leaflet does not listen to mouse events at all in this context,
-					It can't trigger `mouseout`, which would blur the previous feature.
-					Hence, we have to make sure by ourselves that we don't leave a tray of
-					highlighted features.
-				 */
-				if (currentHighlight) blurFeature(currentHighlight);
-				currentHighlight = e.target;
-
-				highlightFeature(e.target);
-				tooltip.style.display = 'block';
-				tooltip.style.color = DIVISIONS_COLORS[level][suffix];
-				tooltip.innerHTML = `<div class='tooltip-ko'>${name}</div><div class='tooltip-en'>${englishName}</div>`;
-			};
-			layer.on({
-				mouseover: mouseoverHandler,
-				mouseout: (e) => {
-					blurFeature(e.target);
-					tooltip.style.display = 'none';
-				},
-				click: (e) => {
-					jumpTo(e.target);
-				},
-				/**
-				 * On mobile, we want to simulate a mousemove event on the center of the Map
-				 * to update the tooltips. while the mouse moves. This works on all synced maps,
-				 * except the one that is being dragged. This is because Leaflet does not listen
-				 * to custom mousemove events during dragging to avoid conflicts. To workaround this
-				 * limitation, we can simply simulate a doubleclick event instead, which will trigger
-				 * the same actions, but Leaflet will handle it even while dragging.
-				 */
-				dblclick: mouseoverHandler
-			});
+	map.addSource('gis', {
+		type: 'geojson',
+		data: features,
+		promoteId: 'id'
+	});
+	map.addLayer({
+		id: 'gis-fill',
+		source: 'gis',
+		type: 'fill',
+		paint: {
+			'fill-color': ['get', 'color'],
+			'fill-opacity': [
+				'case',
+				['to-boolean', ['feature-state', 'hover']],
+				HIGHLIGHTED_FILL_OPACITY,
+				REGULAR_FILL_OPACITY
+			]
 		}
-	}).addTo(map);
+	});
+	map.addLayer({
+		id: 'gis-outline',
+		source: 'gis',
+		type: 'line',
+		paint: {
+			'line-color': ['get', 'color'],
+			'line-width': STROKE_WEIGHT
+		}
+	});
+
+	let currentHighlight: Feature | null = null;
+
+	const mouseMoveHandler = (
+		e: MapMouseEvent & {
+			features?: MapGeoJSONFeature[];
+		} & Object
+	) => {
+		if (currentHighlight) blurFeature(map, currentHighlight);
+		if (!e.features?.[0]) return;
+		const feature = e.features[0];
+		currentHighlight = feature;
+		highlightFeature(map, feature);
+		
+		const suffix = feature.properties.name.slice(-1);
+		tooltip.style.display = 'block';
+		tooltip.style.color = DIVISIONS_COLORS[level][suffix];
+		tooltip.innerHTML = `<div class='tooltip-ko'>${feature.properties.name}</div><div class='tooltip-en'>${feature.properties.name_eng}</div>`;
+	};
+	map.on('mousemove', 'gis-fill', mouseMoveHandler);
+	map.on('dblclick', 'gis-fill', mouseMoveHandler);
+	map.on('mouseleave', 'gis-fill', () => {
+		if (currentHighlight) blurFeature(map, currentHighlight);
+		tooltip.style.display = 'none';
+	});
+
+	map.on('click', 'gis-fill', (e) => {
+		if (!e.features?.[0]) return;
+		const feature = e.features[0];
+    jumpTo(map, feature);
+	});
+
+	// L.geoJSON(features, {
+	// 	style: (feature) => {
+	// 		const suffix = feature!.properties.name.slice(-1);
+	// 		return {
+	// 			color: DIVISIONS_COLORS[level][suffix],
+	// 			fillOpacity: REGULAR_FILL_OPACITY,
+	// 			weight: STROKE_WEIGHT
+	// 		};
+	// 	},
+	// 	onEachFeature: (feature, layer) => {
+	// 		const name = feature.properties.name;
+	// 		const englishName = feature.properties.name_eng;
+	// 		featuresStore[`${name} (${englishName})`] = layer;
+	// 		const suffix = name.slice(-1);
+	// 		const mouseoverHandler: LeafletEventHandlerFn = (e) => {
+	// 			/* This is useful when using our 'dblclick' event simulating hack.
+	// 				Since leaflet does not listen to mouse events at all in this context,
+	// 				It can't trigger `mouseout`, which would blur the previous feature.
+	// 				Hence, we have to make sure by ourselves that we don't leave a tray of
+	// 				highlighted features.
+	// 			 */
+	// 			if (currentHighlight) blurFeature(currentHighlight);
+	// 			currentHighlight = e.target;
+
+	// 			highlightFeature(e.target);
+	// 			tooltip.style.display = 'block';
+	// 			tooltip.style.color = DIVISIONS_COLORS[level][suffix];
+	// 			tooltip.innerHTML = `<div class='tooltip-ko'>${name}</div><div class='tooltip-en'>${englishName}</div>`;
+	// 		};
+	// 		layer.on({
+	// 			mouseover: mouseoverHandler,
+	// 			mouseout: (e) => {
+	// 				blurFeature(e.target);
+	// 				tooltip.style.display = 'none';
+	// 			},
+	// 			click: (e) => {
+	// 				jumpTo(e.target);
+	// 			},
+	// 			/**
+	// 			 * On mobile, we want to simulate a mousemove event on the center of the Map
+	// 			 * to update the tooltips. while the mouse moves. This works on all synced maps,
+	// 			 * except the one that is being dragged. This is because Leaflet does not listen
+	// 			 * to custom mousemove events during dragging to avoid conflicts. To workaround this
+	// 			 * limitation, we can simply simulate a doubleclick event instead, which will trigger
+	// 			 * the same actions, but Leaflet will handle it even while dragging.
+	// 			 */
+	// 			dblclick: mouseoverHandler
+	// 		});
+	// 	}
+	// }).addTo(map);
 }
 
 /**
@@ -167,42 +217,85 @@ export async function initMap(map: L.Map, level: MapLevel, features: Feature, fe
  * @param query The name query, any features which name includes this string will be matched
  * @returns The matched features
  */
-export function findFeaturesByName(features: FeatureMap, query: string): FeatureMap {
-	const foundNames = Object.keys(features)
-		.filter((name) => name.toLowerCase().includes(query))
-		.slice(0, 20);
+export function findFeaturesByName(maps: Record<MapLevel, Map>, query: string): Array<{
+  level: MapLevel,
+  map: Map,
+  feature: Feature
+}> {
+	const foundFeatures: Array<{ level: MapLevel, map: Map, feature: Feature }> = [];
+  for (const [level, map] of Object.entries(maps)) {
+    const source = map.getSource('gis');
+    const serialized = source?.serialize() as { data: {features: Feature[] } };
+    if (!serialized) return [];
+    
+    const matches = serialized.data.features.filter(f =>
+      f.properties!.name_eng.toLowerCase().includes(query.toLowerCase())
+      || f.properties!.name.includes(query)
+    );
+    foundFeatures.push(...matches.map((feature) => ({ level: level as MapLevel, map, feature })));
+  }
+  return foundFeatures;
+}
 
-	const foundFeatures: FeatureMap = {};
-	for (const name of foundNames) {
-		foundFeatures[name] = features[name];
-	}
-	return foundFeatures;
+export function bbox(feature: Feature): LngLatBoundsLike {
+const coords = (feature.geometry as any).coordinates.flat(Infinity);
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+  for (let i = 0; i < coords.length; i += 2) {
+    const x = coords[i], y = coords[i + 1];
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+  }
+
+  return [minX, minY, maxX, maxY];
 }
 
 /**
  * Zooms into a given feature.
- * @param feature The feature to zoom into.
+ * @param target The feature to zoom into.
  */
-export function jumpTo(feature: L.FeatureGroup) {
-	(<any>feature)._map.fitBounds(feature.getBounds());
+export function jumpTo(map: Map, target: Feature) {
+  const source = map.getSource('gis')?.serialize() as { data: { features: Feature[] } };
+  if (!source)
+    return;
+  console.log(source);
+  const fullFeature = source.data.features.find(f => f.properties!.id === target.properties!.id);
+  if (!fullFeature)
+    return;
+  console.log(fullFeature);
+  map.fitBounds(bbox(fullFeature), {padding: 40});
 }
 
 /**
  * Highlights a feature by making it more opaque.
+ * @param map The map to highlight the feature on
+ * @param layer The layer to which the feature belongs
  * @param feature The feature to highlight
  */
-export function highlightFeature(feature: L.FeatureGroup) {
-	feature.setStyle({
-		fillOpacity: HIGHLIGHTED_FILL_OPACITY
-	});
+export function highlightFeature(map: Map, feature: Feature) {
+	map.setFeatureState(
+		{
+			source: 'gis',
+			id: feature.properties!.id as string
+		},
+		{ hover: true }
+	);
 }
 
 /**
  * Un-highlight a feature
- * @param feature The feature to blur
+ * @param map The map to un-highlight the feature on
+ * @param layer The layer to which the feature belongs
+ * @param feature The feature to un-highlight
  */
-export function blurFeature(feature: L.FeatureGroup) {
-	feature.setStyle({
-		fillOpacity: REGULAR_FILL_OPACITY
-	});
+export function blurFeature(map: Map, feature: Feature) {
+	map.setFeatureState(
+		{
+			source: 'gis',
+			id: feature.properties!.id as string
+		},
+		{ hover: false }
+	);
 }
